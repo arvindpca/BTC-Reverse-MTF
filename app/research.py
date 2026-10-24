@@ -38,7 +38,16 @@ BIG_SIGNAL = dict(rsi_lo=[35.0, 40.0], sweep_lookback=[12, 24], setup_valid=[2, 
 BIG_ENGINE = dict(rr=[2.0, 3.0], be_r=[None, 1.0])
 BIG_FIXED = dict(min_risk_pct=0.5, max_risk_pct=6.0, max_hold=2880)  # stops >= 0.5%, hold up to 48h
 
-PROFILES = {"small": (SIGNAL_GRID, ENGINE_GRID, {}), "big": (BIG_SIGNAL, BIG_ENGINE, BIG_FIXED)}
+# Dedicated BUY<->SELL reverse experiment. Keep invert=True fixed; vary only setup quality,
+# HTF regime, 5m confirmation, and execution RR/BE. This is research, not a live-trading preset.
+REVERSE_SIGNAL = dict(rsi_lo=[30.0, 35.0, 40.0], sweep_lookback=[8, 16, 24], setup_valid=[2, 4],
+                      htf=["any", "with", "range"], trig_lookback=[3, 5], stop_atr_buf=[0.1, 0.2],
+                      confirm_5m=[False, True], invert=[True])
+REVERSE_ENGINE = dict(rr=[1.5, 2.0, 3.0], be_r=[None, 1.0])
+REVERSE_FIXED = dict(min_risk_pct=0.25, max_risk_pct=4.0, max_hold=720)
+
+PROFILES = {"small": (SIGNAL_GRID, ENGINE_GRID, {}), "big": (BIG_SIGNAL, BIG_ENGINE, BIG_FIXED),
+            "reverse": (REVERSE_SIGNAL, REVERSE_ENGINE, REVERSE_FIXED)}
 
 
 def _product(grid: dict):
