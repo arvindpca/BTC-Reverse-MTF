@@ -28,11 +28,11 @@ jobs:
           pip install -r requirements.txt
       - name: Unit tests
         run: python -m pytest -q
-      - name: Run BTC and PAXG 30-day research grid
+      - name: Run BTC and PAXG 180-day research grid
         run: |
-          python -m app.research --assets BTCUSDT PAXGUSDT --days 30 --warmup 30 --profile small --min-trades 8 --out results
+          python -m app.research --assets BTCUSDT PAXGUSDT --days 180 --warmup 30 --profile small --min-trades 20 --out results
           cat results/summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: 5m-confirmation-30d-results
+          name: 5m-confirmation-180d-results
           path: results/
