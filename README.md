@@ -1,7 +1,7 @@
 # BTC-Reverse-MTF
 
 Research harness for a **multi-timeframe stop-and-reverse** strategy on **BTC, PAXG and XAU**
-(4h + 1h + 15m + 1m). Research only: it never places orders and holds no credentials.
+(4h + 1h + 15m + 5m + 1m). Research only: it never places orders and holds no credentials.
 
 ## Status - read this first
 
@@ -19,17 +19,18 @@ Research harness for a **multi-timeframe stop-and-reverse** strategy on **BTC, P
 | 4h | regime / bias | EMA20 vs EMA50 trend; Kaufman efficiency ratio (<= 0.30 = range) |
 | 1h | stretch | RSI(14) <= `rsi_lo` (long) or >= `100 - rsi_lo` (short), last *closed* 1h bar |
 | 15m | setup | liquidity sweep: bar takes the prior K-bar extreme but closes back inside with a rejection body; valid for M bars |
+| 5m | confirmation | last fully closed 5m candle closes beyond the previous 3 closed 5m bars in the trade direction, with matching candle direction; `confirm_5m=False` is the comparison control |
 | 1m | trigger | 1m close beyond the prior 5 one-minute extremes, candle in trade direction |
 
 * **Reverse mechanism**: while in a trade, a valid opposite signal closes it at that bar's close and flips (same idea as the `REVERSAL_LIMIT_PAPER.md` spec in BTC-SMC-Live, but market-at-close here).
 * `invert=True` mirrors every signal (same stop distance, opposite side) so the data decides whether *fading* or *following* the rejection pays.
 * Stop beyond the sweep extreme (+0.1 ATR). Target `rr` x R. Optional break-even at 1R. 12h time stop. One entry per setup.
 * Costs: 0.06% fee + 0.02% slippage **per side**. A trade with a 0.4% stop pays ~0.4R in costs, so stops under 0.25% are skipped.
-* Every signal uses only candles closed by the signal bar (checked by truncating the data in tests).
+* Every signal uses only candles closed by the signal bar. The 5m confirmation uses the most recent fully closed 5m candle; future-invariance tests cover this alignment.
 
 ## How the verdict works (anti self-deception)
 
-432 configs are tried per asset. The best one *on the train part* will often look good by luck, so:
+864 configs are tried per asset in the small profile (the big profile tests its own grid). The best one *on the train part* will often look good by luck, so:
 
 1. Data is split by time: first 60% = train, last 40% = test. Configs are ranked on **train only**.
 2. The best train config must be **positive on the untouched test part**, with >= 30 trades, t-stat >= 2, and at least 60% of the top-10 train configs must also be positive on test.
