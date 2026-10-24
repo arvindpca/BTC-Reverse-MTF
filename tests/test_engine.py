@@ -94,3 +94,19 @@ def test_summarize_basics():
     assert s["n"] == 2 and s["win_rate"] == 0.5
     assert s["net_r"] == pytest.approx(s["gross_r"] - s["cost_r"])
     assert summarize([])["n"] == 0
+
+
+def test_trailing_stop_locks_in_profit():
+    # long @100, stop 99 (1R=1). Price runs to 104 (+4R) then falls: trail 2R behind best -> stop 102 -> exit ~102
+    bars = [(100, 100, 100, 100), (100, 101.5, 99.8, 101), (101, 104.0, 100.8, 103.5), (103.5, 103.6, 101.9, 102.0), (102, 102, 102, 102)]
+    t = go(bars, {0: (1, 99.0, 1)}, be_r=None, rr=50.0, trail_r=2.0, trail_start_r=1.0)
+    assert t[0].reason == "TRAIL" and t[0].exit == pytest.approx(102.0) and t[0].gross_r == pytest.approx(2.0)
+
+
+def test_pooled_t_stat_inputs_match():
+    bars = [(100, 100, 100, 100), (100, 102.5, 99.5, 102), (102, 102, 102, 102),
+            (100, 100, 100, 100), (100, 100, 98.5, 98.8), (99, 99, 99, 99)]
+    t = go(bars, {0: (1, 99.0, 1), 3: (1, 99.0, 2)}, be_r=None)
+    s = summarize(t)
+    assert s["ss"] == pytest.approx(sum(x.net_r ** 2 for x in t))
+    assert s["net_half_r"] == pytest.approx(s["gross_r"] - 0.5 * s["cost_r"])

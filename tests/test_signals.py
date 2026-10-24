@@ -81,3 +81,32 @@ def test_research_window_trades_only_after_warmup():
 def pd_ts(x):
     import pandas as pd
     return pd.Timestamp(x)
+
+
+def test_new_families_are_causal_and_produce_signals():
+    from app.families import bollinger, donchian, ema_sar
+    df = make_synthetic(n=60 * 24 * 60, seed=9)
+    n1 = 60 * 24 * 40 + 29
+    cases = [(donchian, dict(N=20, htf="with", confirm15=True)), (donchian, dict(N=20, invert=True)),
+             (bollinger, dict(k=1.5, htf="range")), (bollinger, dict(k=1.5, invert=True)),
+             (ema_sar, dict(fast=12, slow=48, htf="with")), (ema_sar, dict(fast=12, slow=48, invert=True))]
+    fa, fb = compute_features(df.iloc[:n1]), compute_features(df)
+    for fn, kw in cases:
+        a, b = fn(fa, **kw), fn(fb, **kw)
+        np.testing.assert_array_equal(a.side, b.side[:n1])
+        np.testing.assert_array_equal(a.stop, b.stop[:n1])
+        assert (b.side != 0).sum() > 0, (fn.__name__, kw)
+        act = b.side != 0
+        longs, shorts = b.side == 1, b.side == -1
+        assert (b.stop[longs] < fb.c[longs]).all() and (b.stop[shorts] > fb.c[shorts]).all()
+        assert (np.abs(b.stop[act] - fb.c[act]) / fb.c[act] > 0.001).all()
+
+
+def test_signal_only_on_bar_that_closes_the_hour():
+    from app.families import donchian
+    df = make_synthetic(n=60 * 24 * 30, seed=9)
+    f = compute_features(df)
+    s = donchian(f, N=10)
+    idx = np.flatnonzero(s.side != 0)
+    assert len(idx) > 3
+    assert all(f.index[k].minute == 59 for k in idx)  # last minute of an hour = the 1h bar just closed

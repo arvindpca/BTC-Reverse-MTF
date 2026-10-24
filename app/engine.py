@@ -25,6 +25,8 @@ class EngineParams:
     min_risk_pct: float = 0.25   # skip stops so tight that costs eat the edge
     max_risk_pct: float = 2.5
     reverse: bool = True
+    trail_r: float | None = None  # trailing stop distance in R, behind the best price
+    trail_start_r: float = 1.0    # trailing arms once price has run this many R
 
 
 @dataclass
@@ -44,22 +46,27 @@ class Trade:
 def _scan_exit(o, h, l, c, k, side, entry, stop, p: EngineParams, end: int):
     risk = abs(entry - stop)
     tp = entry + side * p.rr * risk
-    cur, best, moved = stop, entry, False
+    cur, best, kind = stop, entry, "SL"
     for t in range(k + 1, end + 1):
         if side > 0:
             if l[t] <= cur:
-                return t, min(cur, o[t]), ("BE" if moved else "SL")
+                return t, min(cur, o[t]), kind
             if h[t] >= tp:
                 return t, tp, "TP"
             best = max(best, h[t])
         else:
             if h[t] >= cur:
-                return t, max(cur, o[t]), ("BE" if moved else "SL")
+                return t, max(cur, o[t]), kind
             if l[t] <= tp:
                 return t, tp, "TP"
             best = min(best, l[t])
-        if p.be_r is not None and not moved and side * (best - entry) >= p.be_r * risk:
-            cur, moved = entry, True
+        run_r = side * (best - entry)
+        if p.be_r is not None and kind == "SL" and run_r >= p.be_r * risk:
+            cur, kind = entry, "BE"
+        if p.trail_r is not None and run_r >= p.trail_start_r * risk:
+            t_stop = best - side * p.trail_r * risk
+            if (side > 0 and t_stop > cur) or (side < 0 and t_stop < cur):
+                cur, kind = t_stop, "TRAIL"
     return end, c[end], "TIME"
 
 
@@ -117,7 +124,7 @@ def summarize(trades: list[Trade]) -> dict:
     n = len(trades)
     if n == 0:
         return dict(n=0, win_rate=0.0, net_r=0.0, avg_net_r=0.0, gross_r=0.0, cost_r=0.0,
-                    pf=0.0, max_dd_r=0.0, t_stat=0.0)
+                    pf=0.0, max_dd_r=0.0, t_stat=0.0, ss=0.0, net_half_r=0.0)
     net = np.array([t.net_r for t in trades])
     gross = np.array([t.gross_r for t in trades])
     wins, losses = net[net > 0].sum(), -net[net < 0].sum()
@@ -129,4 +136,6 @@ def summarize(trades: list[Trade]) -> dict:
         gross_r=float(gross.sum()), cost_r=float(gross.sum() - net.sum()),
         pf=float(wins / losses) if losses > 0 else (float("inf") if wins > 0 else 0.0),
         max_dd_r=dd, t_stat=float(net.mean() / (sd / np.sqrt(n))) if sd > 0 else 0.0,
+        ss=float((net ** 2).sum()),                       # for pooling t-stats across assets
+        net_half_r=float(gross.sum() - 0.5 * (gross.sum() - net.sum())),  # net if costs were half
     )
