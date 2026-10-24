@@ -129,7 +129,7 @@ def report(results: list[tuple[str, dict, pd.DataFrame]], out: Path, min_trades:
             lines += [f"- top-10 train configs profitable on test: {fmt(info['top10_test_positive_share'] * 100, 0)}%", "",
                       "Best train config:", "",
                       f"`rsi_lo={b.rsi_lo} sweep_lookback={b.sweep_lookback} setup_valid={b.setup_valid} htf={b.htf} "
-                      f"invert={b.invert} rr={b.rr} be_r={b.be_r}`", "",
+                      f"confirm_5m={b.confirm_5m} invert={b.invert} rr={b.rr} be_r={b.be_r}`", "",
                       "| part | trades | win% | net R | avg net R | gross R | cost R | PF | maxDD R | t-stat |",
                       "|---|---|---|---|---|---|---|---|---|---|"]
             for part in ("train", "test"):
