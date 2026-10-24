@@ -20,6 +20,7 @@ import pandas as pd
 
 from . import reverse_eng as re_
 from .detail import cond_of
+from .notify import build_events, send_telegram
 from .paper import PaperConfig, client_order_id, size_position
 from .refine import LEAD, trades_of
 from .reverse_eng import clue_masks, fetch_klines
@@ -125,6 +126,8 @@ def main() -> None:
     df = fetch_klines(a.symbol, "1h", days, 3_600_000)
     df = df[df.index + pd.Timedelta(hours=1) <= now]            # drop the still-forming candle
     res = evaluate(df, start)
+    for m in build_events(res, state, a.symbol):
+        send_telegram(m)
     state.update(start=str(start), symbol=a.symbol, updated=str(now), last_candle=res["last_candle"])
     (out / "state.json").write_text(json.dumps(state, indent=1))
     (out / "result.json").write_text(json.dumps(res, indent=1, default=str))

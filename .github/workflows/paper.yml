@@ -35,6 +35,9 @@ jobs:
             git show origin/paper-state:state.json > paper_out/state.json 2>/dev/null || rm -f paper_out/state.json
           fi
       - name: Run paper log
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python -m app.paper_run --symbol PAXGUSDT --state paper_out/state.json --out paper_out
           cat paper_out/report.md >> "$GITHUB_STEP_SUMMARY"
