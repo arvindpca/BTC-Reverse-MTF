@@ -250,11 +250,12 @@ def report(c: pd.DataFrame, assets: list[str], meta: dict, null: pd.DataFrame, o
     ok = c[passes(c, assets) & (c.key != "ALL")]
     L += ["", "## 2. Clues that were positive after costs on BOTH assets, in BOTH train and test", ""]
     exp = {(r.tf, int(r.nfeat)): r.expected for r in null.itertuples()} if len(null) else {}
+    miss = 0.0 if len(null) else float('nan')  # a (tf, size) absent from the null table passed 0 times
     L += ["| tf | clues passed (1 indicator) | expected by luck | clues passed (2 indicators) | expected by luck |", "|---|---|---|---|---|"]
     for tfn in TFS:
         s = ok[(ok.tf == tfn)]
-        L.append(f"| {tfn} | {int((s.nfeat == 1).sum())} | {exp.get((tfn, 1), float('nan')):.1f} | "
-                 f"{int((s.nfeat == 2).sum())} | {exp.get((tfn, 2), float('nan')):.1f} |")
+        L.append(f"| {tfn} | {int((s.nfeat == 1).sum())} | {exp.get((tfn, 1), miss):.1f} | "
+                 f"{int((s.nfeat == 2).sum())} | {exp.get((tfn, 2), miss):.1f} |")
     L += ["", "A clue that passes is only interesting if the 'passed' count is clearly ABOVE the 'expected by luck' count.", ""]
     ok = ok.assign(score=ok[[f"{a}:test_avg" for a in assets]].min(axis=1))
     for tfn in TFS:
