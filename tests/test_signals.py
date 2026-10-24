@@ -81,3 +81,15 @@ def test_research_window_trades_only_after_warmup():
 def pd_ts(x):
     import pandas as pd
     return pd.Timestamp(x)
+
+
+def test_5m_confirmation_is_causal_and_can_be_disabled():
+    df = make_synthetic(n=60 * 24 * 20, seed=17)
+    n1 = 60 * 24 * 14 + 37
+    enabled = SignalParams(rsi_lo=48.0, sweep_lookback=8, setup_valid=4, htf="any", confirm_5m=True)
+    disabled = SignalParams(rsi_lo=48.0, sweep_lookback=8, setup_valid=4, htf="any", confirm_5m=False)
+    a, b = _signals(df.iloc[:n1], enabled), _signals(df, enabled)
+    np.testing.assert_array_equal(a.side, b.side[:n1])
+    np.testing.assert_array_equal(a.stop, b.stop[:n1])
+    base = _signals(df, disabled)
+    assert np.all((b.side != 0) <= (base.side != 0))
