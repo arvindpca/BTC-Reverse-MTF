@@ -65,7 +65,7 @@ def evaluate(df: pd.DataFrame, start_ts: pd.Timestamp, risk: float = RISK, eq0: 
         pnl = eq * risk * t.net_r
         eq += pnl
         rows.append(dict(entry_time=str(df.index[t.entry_idx]), exit_time=str(df.index[t.exit_idx]), entry=t.entry,
-                         stop=t.stop, exit=t.exit, reason=t.reason, net_r=round(t.net_r, 3), pnl=round(pnl, 2), equity=round(eq, 2)))
+                         stop=t.stop, stop_pct=round(t.risk_pct, 3), exit=t.exit, reason=t.reason, net_r=round(t.net_r, 3), pnl=round(pnl, 2), equity=round(eq, 2)))
     out = dict(last_candle=str(df.index[-1]), last_close=float(df["close"].iloc[-1]), equity=eq, closed=rows, open=None, skipped=None)
     if open_tr:
         cur, best = trailing_state(df, open_tr)
@@ -82,7 +82,45 @@ def evaluate(df: pd.DataFrame, start_ts: pd.Timestamp, risk: float = RISK, eq0: 
     return out
 
 
-def report(res: dict, start_ts: pd.Timestamp, symbol: str) -> str:
+PLAN = dict(start=3000.0, leverage=30, max_position=100000.0, withdraw_pct=0.10)
+
+
+def plan_book(res: dict, start_ts: pd.Timestamp, now: pd.Timestamp, plan: dict = PLAN) -> dict:
+    """User's plan on the same trades: position = min(account x 30, 1 lakh), profit/loss added to the account,
+    10% of the account withdrawn at the end of every calendar month (UTC), anything above 1 lakh also withdrawn."""
+    eq, out, cap = plan["start"], 0.0, plan["max_position"]
+    events = [(pd.Timestamp(r["exit_time"]), "trade", r) for r in res["closed"]]
+    m = start_ts.tz_localize(None).to_period("M")
+    while m.end_time.tz_localize("UTC") < now:
+        events.append((m.end_time.tz_localize("UTC"), "monthend", m.strftime("%Y-%m")))
+        m += 1
+    events.sort(key=lambda e: (e[0], 0 if e[1] == "trade" else 1))
+    rows, months = [], []
+    for ts, kind, x in events:
+        if kind == "trade":
+            n = min(eq * plan["leverage"], cap)
+            pnl = n * x["stop_pct"] / 100 * x["net_r"]
+            eq += pnl
+            rows.append(dict(exit_time=x["exit_time"], entry_time=x["entry_time"], position=round(n), stop_pct=x["stop_pct"], net_r=x["net_r"],
+                             pnl=round(pnl, 2), account=round(eq, 2)))
+        else:
+            w1 = eq * plan["withdraw_pct"]
+            eq -= w1
+            w2 = max(0.0, eq - cap)
+            eq -= w2
+            out += w1 + w2
+            months.append(dict(month=x, withdrawn=round(w1 + w2, 2), account=round(eq, 2), withdrawn_total=round(out, 2)))
+    o = res["open"]
+    cur = None
+    if o:
+        n = min(eq * plan["leverage"], cap)
+        cur = dict(position=n, qty=n / o["entry"], margin=n / plan["leverage"], loss_at_stop=n * o["stop_pct"] / 100,
+                   loss_pct_of_account=n * o["stop_pct"] / 100 / eq * 100 if eq > 0 else float("nan"),
+                   liquidation=o["liquidation"])
+    return dict(account=eq, withdrawn_total=out, trades=rows, months=months, open=cur)
+
+
+def report(res: dict, start_ts: pd.Timestamp, symbol: str, plan: dict | None = None) -> str:
     L = [f"# PAPER trading: {symbol} candidate v2", "",
          f"Started {start_ts:%Y-%m-%d %H:%M} UTC. Last closed candle: {res['last_candle']} (close {res['last_close']:.2f}). "
          f"Paper equity: **{res['equity']:.2f}** (start {START_EQ:.0f}, risk {RISK*100:.0f}% per trade, fees 0.16% round trip assumed). "
@@ -107,6 +145,25 @@ def report(res: dict, start_ts: pd.Timestamp, symbol: str) -> str:
                      f"{r['net_r']:+.2f} | {r['pnl']:+.2f} | {r['equity']:.2f} |")
     else:
         L += ["## Closed trades: none yet", ""]
+    if plan is not None:
+        L += [f"## PLAN BOOK: {PLAN['start']:.0f} start, 30x, position max {PLAN['max_position']:,.0f}, 10% of account withdrawn every month end", "",
+              f"- Account now: **{plan['account']:.2f}**, withdrawn so far: **{plan['withdrawn_total']:.2f}**, "
+              f"total value {plan['account']+plan['withdrawn_total']:.2f} (start {PLAN['start']:.0f})"]
+        if plan["open"]:
+            q = plan["open"]
+            L += [f"- OPEN trade size for this plan: position {q['position']:,.0f}, quantity {q['qty']:.4f}, margin at 30x {q['margin']:.1f}, "
+                  f"loss if the stop is hit {q['loss_at_stop']:.1f} ({q['loss_pct_of_account']:.1f}% of the account), liquidation about {q['liquidation']:.2f}"]
+        L.append("")
+        if plan["trades"]:
+            L += ["| exit | position | stop % | R | P/L | account |", "|---|---|---|---|---|---|"]
+            for r in plan["trades"][-30:]:
+                L.append(f"| {r['exit_time'][:16]} | {r['position']:,} | {r['stop_pct']:.2f} | {r['net_r']:+.2f} | {r['pnl']:+.2f} | {r['account']:.2f} |")
+            L.append("")
+        if plan["months"]:
+            L += ["| month end | withdrawn | account | withdrawn total |", "|---|---|---|---|"]
+            for r in plan["months"]:
+                L.append(f"| {r['month']} | {r['withdrawn']:.2f} | {r['account']:.2f} | {r['withdrawn_total']:.2f} |")
+            L.append("")
     return "\n".join(L)
 
 
@@ -131,7 +188,11 @@ def main() -> None:
     state.update(start=str(start), symbol=a.symbol, updated=str(now), last_candle=res["last_candle"])
     (out / "state.json").write_text(json.dumps(state, indent=1))
     (out / "result.json").write_text(json.dumps(res, indent=1, default=str))
-    (out / "report.md").write_text(report(res, start, a.symbol))
+    plan = plan_book(res, start, now)
+    (out / "plan.json").write_text(json.dumps(plan, indent=1, default=str))
+    pd.DataFrame(plan["trades"]).to_csv(out / "plan_trades.csv", index=False)
+    pd.DataFrame(plan["months"]).to_csv(out / "plan_months.csv", index=False)
+    (out / "report.md").write_text(report(res, start, a.symbol, plan))
     print((out / "report.md").read_text())
 
 
