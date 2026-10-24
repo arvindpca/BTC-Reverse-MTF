@@ -1,0 +1,52 @@
+name: PAXG paper trading (log only)
+
+# Hourly paper-trading log of candidate v2. It recomputes everything from public candles, places NO orders and uses no secrets.
+# State (the start time) and the report live on the 'paper-state' branch.
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paper
+  cancel-in-progress: false
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Restore state
+        run: |
+          mkdir -p paper_out
+          if git fetch -q origin paper-state 2>/dev/null; then
+            git show origin/paper-state:state.json > paper_out/state.json 2>/dev/null || rm -f paper_out/state.json
+          fi
+      - name: Run paper log
+        run: |
+          python -m app.paper_run --symbol PAXGUSDT --state paper_out/state.json --out paper_out
+          cat paper_out/report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish state and report
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp -r paper_out/. /tmp/pub/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan paper-state
+          git rm -rfq .
+          git clean -fdxq
+          cp -r /tmp/pub/. .
+          git add -A
+          git commit -qm "Paper log $(date -u +%FT%H:%MZ)"
+          git push -f origin paper-state
