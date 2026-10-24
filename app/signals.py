@@ -4,6 +4,7 @@
   1h  stretch       : RSI(14) oversold / overbought on the last CLOSED 1h bar
   15m setup         : liquidity sweep - bar takes out the prior K-bar extreme but closes back
                       inside with a rejection body; setup stays valid for M 15m bars
+  5m  confirm       : closed 5m structure break in the signal direction
   1m  trigger       : micro break - 1m close beyond the prior T 1m bars' extreme, with the candle
 
 Stop = beyond the sweep extreme (+ small ATR buffer).  `invert=True` mirrors every signal
@@ -34,6 +35,8 @@ class SignalParams:
     invert: bool = False
     setup_tf: int = 15          # 15 | 60  minutes: timeframe of the sweep setup (60 = bigger stops)
     stretch_tf: int = 60        # 60 | 240 minutes: timeframe of the RSI stretch
+    confirm_5m: bool = True     # require a closed 5m structure-break confirmation
+    confirm_lookback_5m: int = 3  # prior closed 5m bars used for confirmation
 
 
 @dataclass
@@ -52,6 +55,11 @@ class Features:
     l15: np.ndarray
     c15: np.ndarray
     atr15: np.ndarray
+    pos5: np.ndarray
+    o5: np.ndarray
+    h5: np.ndarray
+    l5: np.ndarray
+    c5: np.ndarray
     rsi4h: np.ndarray
     pos60: np.ndarray
     o60: np.ndarray
@@ -70,7 +78,7 @@ class Signals:
 
 def compute_features(df1m: pd.DataFrame) -> Features:
     d = normalize_1m(df1m)
-    r4, r1, r15 = resample(d, 240), resample(d, 60), resample(d, 15)
+    r4, r1, r15, r5 = resample(d, 240), resample(d, 60), resample(d, 15), resample(d, 5)
 
     trend = np.where(ema(r4["close"], 20) > ema(r4["close"], 50), 1.0, -1.0)
     trend[:60] = np.nan
@@ -87,6 +95,7 @@ def compute_features(df1m: pd.DataFrame) -> Features:
     p4 = last_closed_pos(d.index, r4.index, 240)
     p1 = last_closed_pos(d.index, r1.index, 60)
     p15 = last_closed_pos(d.index, r15.index, 15)
+    p5 = last_closed_pos(d.index, r5.index, 5)
     return Features(
         index=d.index,
         o=d["open"].to_numpy(), h=d["high"].to_numpy(), l=d["low"].to_numpy(), c=d["close"].to_numpy(),
@@ -94,6 +103,8 @@ def compute_features(df1m: pd.DataFrame) -> Features:
         pos15=p15,
         o15=r15["open"].to_numpy(), h15=r15["high"].to_numpy(), l15=r15["low"].to_numpy(),
         c15=r15["close"].to_numpy(), atr15=a15,
+        pos5=p5, o5=r5["open"].to_numpy(), h5=r5["high"].to_numpy(),
+        l5=r5["low"].to_numpy(), c5=r5["close"].to_numpy(),
         rsi4h=take(rs4, p4), pos60=p1,
         o60=r1["open"].to_numpy(), h60=r1["high"].to_numpy(), l60=r1["low"].to_numpy(),
         c60=r1["close"].to_numpy(), atr60=a60,
@@ -145,6 +156,19 @@ def build_signals(f: Features, p: SignalParams) -> Signals:
     id_l = np.nan_to_num(take(id_l15, spos), nan=-1.0).astype(np.int64)
     id_s = np.nan_to_num(take(id_s15, spos), nan=-1.0).astype(np.int64)
 
+    # Use only the most recent fully closed 5m candle available at this 1m close.
+    k5 = p.confirm_lookback_5m
+    prior_h5 = pd.Series(f.h5).shift(1).rolling(k5).max().to_numpy()
+    prior_l5 = pd.Series(f.l5).shift(1).rolling(k5).min().to_numpy()
+    c5 = take(f.c5, f.pos5)
+    o5 = take(f.o5, f.pos5)
+    h5 = take(prior_h5, f.pos5)
+    l5 = take(prior_l5, f.pos5)
+    confirm_l = (c5 > h5) & (c5 > o5)
+    confirm_s = (c5 < l5) & (c5 < o5)
+    if not p.confirm_5m:
+        confirm_l = confirm_s = np.ones(len(f.c), dtype=bool)
+
     t = p.trig_lookback
     hh = pd.Series(f.h).shift(1).rolling(t).max().to_numpy()
     ll = pd.Series(f.l).shift(1).rolling(t).min().to_numpy()
@@ -159,8 +183,8 @@ def build_signals(f: Features, p: SignalParams) -> Signals:
             htf_l = htf_s = f.er4h <= ER_RANGE
         else:
             htf_l = htf_s = np.ones(len(f.c), dtype=bool)
-        long_ok = (id_l >= 0) & (f.c > lvl_l) & stretched_l & trig_l & htf_l
-        short_ok = (id_s >= 0) & (f.c < lvl_s) & stretched_s & trig_s & htf_s
+        long_ok = (id_l >= 0) & (f.c > lvl_l) & stretched_l & trig_l & htf_l & confirm_l
+        short_ok = (id_s >= 0) & (f.c < lvl_s) & stretched_s & trig_s & htf_s & confirm_s
 
     side = np.zeros(len(f.c), dtype=np.int8)
     side[long_ok] = 1
