@@ -16,7 +16,7 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write   # only to publish the report to the 'results' branch
 
 jobs:
   research:
@@ -52,3 +52,15 @@ jobs:
         with:
           name: research-results
           path: results/
+      - name: Publish report to the results branch
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp -r results/. /tmp/pub/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan results
+          git rm -rfq .
+          git clean -fdxq
+          cp -r /tmp/pub/. .
+          git add -A
+          git commit -qm "Research results (run $GITHUB_RUN_ID)"
+          git push -f origin results
