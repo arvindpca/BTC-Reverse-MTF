@@ -44,6 +44,20 @@ def report(df: pd.DataFrame, label: str) -> list[str]:
     return L
 
 
+def trades_csv(df: pd.DataFrame, eq0: float = 10000.0) -> pd.DataFrame:
+    masks, a = clue_masks(df)
+    tr = base_trades(df, v2_condition(df, masks), a, WARM, len(df))
+    eq, rows = eq0, []
+    for t in tr:
+        risk_amt = eq * RISK
+        pnl = risk_amt * t.net_r
+        eq += pnl
+        rows.append(dict(entry_time=df.index[t.entry_idx], exit_time=df.index[t.exit_idx], entry=round(t.entry, 2), stop=round(t.stop, 2),
+                         exit=round(t.exit, 2), reason=t.reason, stop_pct=round(t.risk_pct, 2), risk_amount=round(risk_amt, 2),
+                         notional=round(risk_amt / (t.risk_pct / 100), 0), net_r=round(t.net_r, 3), pnl=round(pnl, 2), equity=round(eq, 2)))
+    return pd.DataFrame(rows)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--symbol", default="PAXGUSDT")
@@ -56,6 +70,7 @@ def main() -> None:
     out = Path(a.out)
     out.mkdir(exist_ok=True)
     (out / "summary.md").write_text("\n".join(L))
+    trades_csv(df).to_csv(out / "trades_10k.csv", index=False)
     print("\n".join(L))
 
 
