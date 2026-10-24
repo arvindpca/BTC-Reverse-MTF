@@ -25,8 +25,8 @@ from .paper import PaperConfig, client_order_id, size_position
 from .refine import LEAD, trades_of
 from .reverse_eng import clue_masks, fetch_klines
 
-STOP_ATR, RISK, START_EQ, WARM = 4.0, 0.02, 300.0, 700
-CFG = PaperConfig(margin=300.0, leverage=30)
+STOP_ATR, RISK, START_EQ, WARM = 4.0, 0.02, 1000.0, 700
+CFG = PaperConfig(margin=1000.0, leverage=30)
 
 
 def v2_condition(df, masks):
