@@ -6,3 +6,4 @@ search_out/
 smoke_results/
 *.csv.gz
 .env
+events_out/

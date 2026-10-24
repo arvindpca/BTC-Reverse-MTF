@@ -1,0 +1,60 @@
+name: Movement study (BTC + PAXG)
+
+# Manual only. Fetches public 1m candles on the runner, runs the movement-first event study with a random-walk
+# null control and publishes the report to the 'events-results' branch. No orders, no secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      assets:
+        description: "Binance symbols, space separated"
+        default: "BTCUSDT PAXGUSDT"
+      days:
+        description: "Studied window in days"
+        default: "180"
+      warmup_days:
+        description: "Extra days before the window for indicator warm-up (not studied)"
+        default: "60"
+      null_trials:
+        description: "Random-walk trials for the 'passes by luck' baseline"
+        default: "8"
+
+permissions:
+  contents: write   # only to publish the report branch
+
+jobs:
+  events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ASSETS: ${{ inputs.assets }}
+      DAYS: ${{ inputs.days }}
+      WARMUP: ${{ inputs.warmup_days }}
+      NULLS: ${{ inputs.null_trials }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run study
+        run: |
+          for v in "$DAYS" "$WARMUP" "$NULLS"; do case "$v" in ''|*[!0-9]*) echo "numbers only"; exit 1;; esac; done
+          if ! [[ "$ASSETS" =~ ^[A-Z0-9\ ]+$ ]]; then echo "bad assets"; exit 1; fi
+          python -m app.events --assets $ASSETS --days "$DAYS" --warmup "$WARMUP" --null-trials "$NULLS" --out events_out
+          cat events_out/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish report to the events-results branch
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp -r events_out/. /tmp/pub/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan events-results
+          git rm -rfq .
+          git clean -fdxq
+          cp -r /tmp/pub/. .
+          git add -A
+          git commit -qm "Movement study results (run $GITHUB_RUN_ID)"
+          git push -f origin events-results

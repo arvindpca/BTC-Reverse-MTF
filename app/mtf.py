@@ -50,10 +50,10 @@ def resample(df: pd.DataFrame, minutes: int) -> pd.DataFrame:
     return out.iloc[1:]
 
 
-def last_closed_pos(index_1m: pd.DatetimeIndex, htf_index: pd.DatetimeIndex, minutes: int) -> np.ndarray:
-    """For each 1m bar, position of the last HTF bar fully closed by that 1m bar's close (-1 = none yet)."""
+def last_closed_pos(index_1m: pd.DatetimeIndex, htf_index: pd.DatetimeIndex, minutes: int, bar_minutes: int = 1) -> np.ndarray:
+    """For each bar (length `bar_minutes`, default 1m), position of the last HTF bar fully closed by that bar's close (-1 = none yet)."""
     avail = (htf_index + pd.Timedelta(minutes=minutes)).values
-    close_t = (index_1m + pd.Timedelta(minutes=1)).values
+    close_t = (index_1m + pd.Timedelta(minutes=bar_minutes)).values
     return np.searchsorted(avail, close_t, side="right") - 1
 
 
