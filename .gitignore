@@ -8,3 +8,4 @@ smoke_results/
 .env
 events_out/
 reverse_out/
+detail_out/
