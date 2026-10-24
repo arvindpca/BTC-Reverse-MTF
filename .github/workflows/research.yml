@@ -11,6 +11,15 @@ on:
       days:
         description: "History length in days"
         default: "180"
+      profile:
+        description: "small = 15m sweeps (tight stops) | big = 1h sweeps + 4h RSI (wide stops)"
+        default: "small"
+      warmup_days:
+        description: "Extra days fetched before the window for indicator warm-up (no trades)"
+        default: "0"
+      min_trades:
+        description: "Minimum trades per part for a config to count"
+        default: "30"
       xau_csv_url:
         description: "Optional URL of an XAUUSD 1m CSV (timestamp,open,high,low,close[,volume])"
         default: ""
@@ -25,6 +34,9 @@ jobs:
     env:
       ASSETS: ${{ inputs.assets }}
       DAYS: ${{ inputs.days }}
+      PROFILE: ${{ inputs.profile }}
+      WARMUP: ${{ inputs.warmup_days }}
+      MIN_TRADES: ${{ inputs.min_trades }}
       XAU_URL: ${{ inputs.xau_csv_url }}
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +50,8 @@ jobs:
           pip install -r requirements.txt
       - name: Run research
         run: |
-          case "$DAYS" in ''|*[!0-9]*) echo "days must be a number"; exit 1;; esac
+          for v in "$DAYS" "$WARMUP" "$MIN_TRADES"; do case "$v" in ''|*[!0-9]*) echo "days/warmup/min_trades must be numbers"; exit 1;; esac; done
+          case "$PROFILE" in small|big) ;; *) echo "profile must be small or big"; exit 1;; esac
           if ! [[ "$ASSETS" =~ ^[A-Z0-9\ ]+$ ]]; then echo "bad assets"; exit 1; fi
           ARGS=""
           if [ -n "$XAU_URL" ]; then
@@ -46,7 +59,7 @@ jobs:
             ARGS="--csv XAUUSD=xau_1m.csv"
             ASSETS="$ASSETS XAUUSD"
           fi
-          python -m app.research --assets $ASSETS --days "$DAYS" $ARGS --out results
+          python -m app.research --assets $ASSETS --days "$DAYS" --warmup "$WARMUP" --profile "$PROFILE" --min-trades "$MIN_TRADES" $ARGS --out results
           cat results/summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:

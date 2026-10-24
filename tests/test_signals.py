@@ -52,3 +52,32 @@ def test_invert_mirrors_side_and_stop_distance():
     np.testing.assert_allclose(np.abs(b.stop[act] - f.c[act]), np.abs(a.stop[act] - f.c[act]))
     assert (b.stop[b.side == 1] < f.c[b.side == 1]).all()
     assert (b.stop[b.side == -1] > f.c[b.side == -1]).all()
+
+
+def test_big_profile_timeframes_are_causal_and_wider():
+    df = make_synthetic(n=60 * 24 * 40, seed=5)
+    n1 = 60 * 24 * 28 + 17
+    p = SignalParams(rsi_lo=48.0, sweep_lookback=12, setup_valid=4, htf="any", setup_tf=60, stretch_tf=240, trig_lookback=5)
+    a, b = _signals(df.iloc[:n1], p), _signals(df, p)
+    np.testing.assert_array_equal(a.side, b.side[:n1])
+    np.testing.assert_array_equal(a.stop, b.stop[:n1])
+    f = compute_features(df)
+    small = build_signals(f, SignalParams(rsi_lo=48.0, sweep_lookback=12, setup_valid=4, htf="any"))
+    act_b, act_s = b.side != 0, small.side != 0
+    assert act_b.sum() > 0, "big profile must produce signals on this data"
+    risk_b = np.abs(b.stop[act_b] - f.c[act_b]) / f.c[act_b]
+    risk_s = np.abs(small.stop[act_s] - f.c[act_s]) / f.c[act_s]
+    assert np.median(risk_b) > np.median(risk_s)  # 1h sweeps give wider stops than 15m sweeps
+
+
+def test_research_window_trades_only_after_warmup():
+    from app.research import run_asset
+    df = make_synthetic(n=60 * 24 * 40, seed=5)
+    grid, meta = run_asset("S", df, 0.6, quick=True, trade_days=20)
+    assert meta["bars"] == 20 * 1440
+    assert pd_ts(meta["start"]) >= pd_ts(str(df.index[0])) + __import__("pandas").Timedelta(days=19)
+
+
+def pd_ts(x):
+    import pandas as pd
+    return pd.Timestamp(x)

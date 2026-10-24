@@ -32,6 +32,8 @@ class SignalParams:
     trig_lookback: int = 5      # 1m bars for the micro break
     stop_atr_buf: float = 0.1   # x ATR(15m) beyond the sweep extreme
     invert: bool = False
+    setup_tf: int = 15          # 15 | 60  minutes: timeframe of the sweep setup (60 = bigger stops)
+    stretch_tf: int = 60        # 60 | 240 minutes: timeframe of the RSI stretch
 
 
 @dataclass
@@ -50,6 +52,13 @@ class Features:
     l15: np.ndarray
     c15: np.ndarray
     atr15: np.ndarray
+    rsi4h: np.ndarray
+    pos60: np.ndarray
+    o60: np.ndarray
+    h60: np.ndarray
+    l60: np.ndarray
+    c60: np.ndarray
+    atr60: np.ndarray
 
 
 @dataclass
@@ -70,6 +79,10 @@ def compute_features(df1m: pd.DataFrame) -> Features:
     rs[:42] = np.nan
     a15 = atr(r15["high"], r15["low"], r15["close"], 14)
     a15[:42] = np.nan
+    a60 = atr(r1["high"], r1["low"], r1["close"], 14)
+    a60[:42] = np.nan
+    rs4 = rsi(r4["close"], 14)
+    rs4[:42] = np.nan
 
     p4 = last_closed_pos(d.index, r4.index, 240)
     p1 = last_closed_pos(d.index, r1.index, 60)
@@ -81,6 +94,9 @@ def compute_features(df1m: pd.DataFrame) -> Features:
         pos15=p15,
         o15=r15["open"].to_numpy(), h15=r15["high"].to_numpy(), l15=r15["low"].to_numpy(),
         c15=r15["close"].to_numpy(), atr15=a15,
+        rsi4h=take(rs4, p4), pos60=p1,
+        o60=r1["open"].to_numpy(), h60=r1["high"].to_numpy(), l60=r1["low"].to_numpy(),
+        c60=r1["close"].to_numpy(), atr60=a60,
     )
 
 
@@ -102,20 +118,32 @@ def _latch(sweep: np.ndarray, level: np.ndarray, valid: int) -> tuple[np.ndarray
 def build_signals(f: Features, p: SignalParams) -> Signals:
     if p.htf not in ("any", "with", "range"):
         raise ValueError("htf must be any|with|range")
+    if p.setup_tf == 15:
+        so, sh, sl, sc, sa, spos = f.o15, f.h15, f.l15, f.c15, f.atr15, f.pos15
+    elif p.setup_tf == 60:
+        so, sh, sl, sc, sa, spos = f.o60, f.h60, f.l60, f.c60, f.atr60, f.pos60
+    else:
+        raise ValueError("setup_tf must be 15 or 60")
+    if p.stretch_tf == 60:
+        rsi_arr = f.rsi1h
+    elif p.stretch_tf == 240:
+        rsi_arr = f.rsi4h
+    else:
+        raise ValueError("stretch_tf must be 60 or 240")
     k = p.sweep_lookback
-    s_lo, s_hi = pd.Series(f.l15), pd.Series(f.h15)
+    s_lo, s_hi = pd.Series(sl), pd.Series(sh)
     prior_min = s_lo.shift(1).rolling(k).min().to_numpy()
     prior_max = s_hi.shift(1).rolling(k).max().to_numpy()
     with np.errstate(invalid="ignore"):
-        sweep_l = (f.l15 < prior_min) & (f.c15 > prior_min) & (f.c15 > f.o15)
-        sweep_s = (f.h15 > prior_max) & (f.c15 < prior_max) & (f.c15 < f.o15)
-    stop_l15 = f.l15 - p.stop_atr_buf * f.atr15
-    stop_s15 = f.h15 + p.stop_atr_buf * f.atr15
+        sweep_l = (sl < prior_min) & (sc > prior_min) & (sc > so)
+        sweep_s = (sh > prior_max) & (sc < prior_max) & (sc < so)
+    stop_l15 = sl - p.stop_atr_buf * sa
+    stop_s15 = sh + p.stop_atr_buf * sa
     lvl_l15, id_l15 = _latch(sweep_l, stop_l15, p.setup_valid)
     lvl_s15, id_s15 = _latch(sweep_s, stop_s15, p.setup_valid)
-    lvl_l, lvl_s = take(lvl_l15, f.pos15), take(lvl_s15, f.pos15)
-    id_l = np.nan_to_num(take(id_l15, f.pos15), nan=-1.0).astype(np.int64)
-    id_s = np.nan_to_num(take(id_s15, f.pos15), nan=-1.0).astype(np.int64)
+    lvl_l, lvl_s = take(lvl_l15, spos), take(lvl_s15, spos)
+    id_l = np.nan_to_num(take(id_l15, spos), nan=-1.0).astype(np.int64)
+    id_s = np.nan_to_num(take(id_s15, spos), nan=-1.0).astype(np.int64)
 
     t = p.trig_lookback
     hh = pd.Series(f.h).shift(1).rolling(t).max().to_numpy()
@@ -123,8 +151,8 @@ def build_signals(f: Features, p: SignalParams) -> Signals:
     with np.errstate(invalid="ignore"):
         trig_l = (f.c > hh) & (f.c > f.o)
         trig_s = (f.c < ll) & (f.c < f.o)
-        stretched_l = f.rsi1h <= p.rsi_lo
-        stretched_s = f.rsi1h >= 100.0 - p.rsi_lo
+        stretched_l = rsi_arr <= p.rsi_lo
+        stretched_s = rsi_arr >= 100.0 - p.rsi_lo
         if p.htf == "with":
             htf_l, htf_s = f.trend4h > 0, f.trend4h < 0
         elif p.htf == "range":
