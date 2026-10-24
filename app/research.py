@@ -28,7 +28,7 @@ from .signals import SignalParams, build_signals, compute_features
 from .synthetic import make_synthetic
 
 SIGNAL_GRID = dict(rsi_lo=[30.0, 35.0, 40.0], sweep_lookback=[8, 16], setup_valid=[2, 4],
-                   htf=["any", "with", "range"], invert=[False, True])
+                   htf=["any", "with", "range"], invert=[False, True], confirm_5m=[False, True])
 ENGINE_GRID = dict(rr=[1.5, 2.0, 3.0], be_r=[None, 1.0])
 QUICK_SIGNAL = dict(rsi_lo=[40.0], sweep_lookback=[8], setup_valid=[4], htf=["any", "range"], invert=[False, True])
 QUICK_ENGINE = dict(rr=[2.0], be_r=[None])
