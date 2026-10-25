@@ -5,7 +5,12 @@ name: PAXG paper trading (log only)
 on:
   schedule:
     - cron: "7 * * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      test_telegram:
+        description: "Send a test Telegram message (checks the secrets) and stop"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -28,6 +33,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Telegram test
+        if: ${{ inputs.test_telegram }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "from app.notify import send_telegram as s; ok=s('PAXG paper trading: Telegram alert test OK. Entry/exit alerts yahan aayenge.'); print('sent' if ok else 'NOT sent: check the two secrets'); raise SystemExit(0 if ok else 1)"
       - name: Restore state
         run: |
           mkdir -p paper_out
@@ -35,6 +47,7 @@ jobs:
             git show origin/paper-state:state.json > paper_out/state.json 2>/dev/null || rm -f paper_out/state.json
           fi
       - name: Run paper log
+        if: ${{ !inputs.test_telegram }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -42,6 +55,7 @@ jobs:
           python -m app.paper_run --symbol PAXGUSDT --state paper_out/state.json --out paper_out
           cat paper_out/report.md >> "$GITHUB_STEP_SUMMARY"
       - name: Publish state and report
+        if: ${{ !inputs.test_telegram }}
         run: |
           rm -rf /tmp/pub && mkdir /tmp/pub && cp -r paper_out/. /tmp/pub/
           git config user.name "github-actions[bot]"

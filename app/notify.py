@@ -36,7 +36,9 @@ def build_events(res: dict, state: dict, symbol: str) -> list[str]:
     if o and o["signal_id"] not in ent:
         msgs.append(f"PAPER ENTRY {symbol} LONG (log only, no real order)\nsignal {o['signal_id'][:16]} UTC at {o['entry']:.2f}\n"
                     f"stop {o['initial_stop']:.2f} ({o['stop_pct']:.2f}% away)\nsize notional {o['notional']:.0f}, margin at 30x {o['margin_at_30x']:.1f}\n"
-                    f"liquidation about {o['liquidation']:.2f}")
+                    f"liquidation about {o['liquidation']:.2f}\n"
+                    f"Agar 1,00,000 position (no leverage): stop lagne par loss about {1e5 * o['stop_pct'] / 100:.0f}, "
+                    f"+2 R par profit about {2e5 * o['stop_pct'] / 100:.0f}")
         ent.add(o["signal_id"])
     state["notified_entries"], state["notified_exits"] = sorted(ent), sorted(ext)
     return msgs
