@@ -218,8 +218,8 @@ def main():
           f"Positive on SEALED TEST: real {(R.te_net_r > 0).mean() * 100:.0f}%, null {(N.te_net_r > 0).mean() * 100:.0f}%.",
           f"Configs passing the selection filter (profitable & PF>1.2 in train AND validation, enough trades): real **{int(R['pass'].sum())}**, "
           f"null (luck only) **{int(N['pass'].sum())}**.",
-          f"Rank correlation train net R vs validation net R across all real configs: {R.tr_net_r.corr(R.va_net_r, method='spearman'):+.2f}; "
-          f"validation vs sealed test: {R.va_net_r.corr(R.te_net_r, method='spearman'):+.2f}  (near 0 = past winners do not stay winners).", ""]
+          f"Rank correlation train net R vs validation net R across all real configs: {R.tr_net_r.rank().corr(R.va_net_r.rank()):+.2f}; "
+          f"validation vs sealed test: {R.va_net_r.rank().corr(R.te_net_r.rank()):+.2f}  (near 0 = past winners do not stay winners).", ""]
     by = R.groupby(R.cfg.str.split("|").str[1]).agg(configs=("cfg", "size"), tr=("tr_net_r", "mean"), va=("va_net_r", "mean"), te=("te_net_r", "mean"))
     L += ["Average net R per config by indicator family (all stops/directions/timeframes):", "", "| family | configs | train avg R | validation avg R | sealed test avg R |", "|---|---|---|---|---|"]
     for k, r in by.sort_values("va", ascending=False).iterrows():
