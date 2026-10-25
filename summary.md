@@ -1,0 +1,96 @@
+# BTCUSDT: data check + indicator-strategy zoo (non-fixed stops)
+
+## 1. Data check
+
+1h bars: 80272, 2017-08-23 to 2026-10-25.
+Expected 80400 hourly bars, got 80272 (128 missing); duplicates: 0; zero-volume bars: 4; largest gap: 1 days 10:00:00.
+
+| year | open | close | return % | max DD % | daily vol % | 1d trending days % (ER20>0.4) | 1h trending % |
+|---|---|---|---|---|---|---|---|
+| 2017 | 4211 | 13716 | +226 | -41 | 5.90 | 34 | 14 |
+| 2018 | 13529 | 3703 | -73 | -81 | 4.35 | 19 | 18 |
+| 2019 | 3700 | 7195 | +94 | -53 | 3.60 | 26 | 18 |
+| 2020 | 7177 | 28924 | +303 | -60 | 3.96 | 27 | 18 |
+| 2021 | 28995 | 46217 | +59 | -55 | 4.25 | 20 | 17 |
+| 2022 | 46656 | 16542 | -65 | -67 | 3.34 | 18 | 17 |
+| 2023 | 16530 | 42284 | +156 | -22 | 2.31 | 25 | 17 |
+| 2024 | 42475 | 93576 | +120 | -32 | 2.77 | 22 | 16 |
+| 2025 | 94401 | 87648 | -7 | -35 | 2.18 | 15 | 16 |
+| 2026 | 87809 | 80454 | -8 | -40 | 2.34 | 20 | 17 |
+
+Buy & hold whole period: 4211 -> 80454 (+1811%).
+
+## 2. Zoo overview (train 2017-21 | validation 2022-23)
+
+Configs evaluated: 912 (real) / 912 (random-walk null). Positive on TRAIN: real 72%, null 32%. Positive on VALIDATION: real 58%, null 46%. Positive on SEALED TEST: real 44%, null 25%.
+Configs passing the selection filter (profitable & PF>1.2 in train AND validation, enough trades): real **125**, null (luck only) **35**.
+Rank correlation train net R vs validation net R across all real configs: +0.42; validation vs sealed test: +0.43  (near 0 = past winners do not stay winners).
+
+Average net R per config by indicator family (all stops/directions/timeframes):
+
+| family | configs | train avg R | validation avg R | sealed test avg R |
+|---|---|---|---|---|
+| er0.4_3bar | 48 | +13.7 | +6.3 | -5.3 |
+| ema50/200 | 48 | +2.7 | +3.6 | -0.5 |
+| keltner_break | 48 | +26.7 | +2.8 | -2.9 |
+| donchian55 | 48 | +11.8 | +2.2 | -4.5 |
+| volspike_trend | 48 | +19.4 | +0.4 | -2.2 |
+| bb_break | 48 | +15.3 | -0.2 | -8.6 |
+| ema20/50 | 48 | +9.3 | -0.4 | -6.2 |
+| donchian20 | 48 | +13.6 | -0.7 | -8.7 |
+| supertrend_14 | 48 | +9.9 | -1.6 | -8.4 |
+| supertrend_10 | 48 | +10.0 | -2.1 | -8.5 |
+| rsi_mr30/70 | 48 | -21.9 | -2.2 | -15.5 |
+| adx_di25 | 48 | +7.0 | -4.7 | -16.4 |
+| dip_in_uptrend | 48 | +3.8 | -5.0 | -0.6 |
+| macd12-26 | 48 | +3.4 | -7.6 | -18.0 |
+| rsi_trend55/45 | 48 | +10.6 | -8.2 | -14.1 |
+| ema9/21 | 48 | +5.5 | -8.3 | -9.0 |
+| bb_revert | 48 | -22.8 | -8.8 | -16.7 |
+| stoch_20/80 | 48 | -17.3 | -9.3 | -18.6 |
+| macd8-17 | 48 | -0.5 | -10.8 | -20.1 |
+
+By timeframe (avg net R per config):
+
+| tf | train | validation | sealed test |
+|---|---|---|---|
+| 1d | +4.8 | +1.3 | +1.8 |
+| 1h | -2.8 | -14.0 | -29.5 |
+| 4h | +13.8 | +4.0 | -1.4 |
+
+## 3. Pre-registered finalists (top 3 by min(PF train, PF validation)) and SEALED TEST (2024-01 onwards, tested once)
+
+| config | train n / PF / net R | val n / PF / net R | TEST n | TEST win% | TEST net R | TEST PF | TEST max DD R |
+|---|---|---|---|---|---|---|---|
+| 1d|bb_break|both|s4_chand | 30 / 2.12 / +12.4 | 20 / 2.53 / +7.0 | 28 | 39 | +0.6 | 1.06 | 4.9 |
+| 4h|keltner_break|long|s4_chand | 80 / 2.38 / +33.3 | 35 / 2.07 / +10.4 | 64 | 31 | -1.0 | 0.96 | 10.7 |
+| 1d|bb_break|both|s2_chand | 52 / 2.04 / +19.5 | 27 / 1.90 / +9.3 | 42 | 31 | +0.9 | 1.04 | 6.3 |
+
+Other passing configs (for completeness; NOT pre-selected, test shown only to measure how many survive):
+
+| config | score | TEST n | TEST net R | TEST PF |
+|---|---|---|---|---|
+| 4h|keltner_break|long|s2_chand | 1.85 | 96 | +7.9 | 1.21 |
+| 4h|rsi_mr30/70|long|s4_chand | 1.84 | 53 | +1.1 | 1.05 |
+| 4h|keltner_break|long|s3_chand | 1.80 | 77 | +2.5 | 1.08 |
+| 4h|donchian55|long|s4_delay | 1.79 | 40 | +6.1 | 1.26 |
+| 4h|er0.4_3bar|long|s4_chand | 1.78 | 56 | +2.5 | 1.10 |
+| 4h|rsi_mr30/70|long|s4_delay | 1.77 | 40 | +3.0 | 1.14 |
+| 4h|rsi_mr30/70|long|s3_delay | 1.76 | 50 | -2.4 | 0.92 |
+| 1d|macd8-17|long|s2_chand | 1.73 | 39 | +11.1 | 1.81 |
+| 4h|bb_break|long|s2_chand | 1.72 | 130 | +2.9 | 1.06 |
+| 4h|er0.4_3bar|long|s3_chand | 1.69 | 67 | -0.2 | 0.99 |
+| 4h|macd8-17|long|s4_delay | 1.68 | 66 | +3.5 | 1.09 |
+| 1d|donchian20|both|s2_chand | 1.68 | 44 | +7.0 | 1.36 |
+| 1d|donchian20|both|s3_chand_rev | 1.67 | 37 | +0.7 | 1.05 |
+| 1d|donchian20|both|s3_chand | 1.67 | 36 | +0.5 | 1.04 |
+| 4h|ema20/50|both|s4_chand | 1.62 | 74 | +3.8 | 1.15 |
+| 4h|er0.4_3bar|long|s3_delay | 1.62 | 54 | +4.4 | 1.14 |
+| 4h|keltner_break|long|s3_delay | 1.61 | 62 | -3.3 | 0.92 |
+| 4h|ema20/50|long|s3_chand | 1.61 | 55 | +9.8 | 1.47 |
+| 4h|donchian55|both|s4_delay | 1.60 | 64 | +1.4 | 1.04 |
+| 4h|bb_break|both|s4_chand | 1.60 | 125 | -1.1 | 0.98 |
+| 1d|keltner_break|both|s2_chand | 1.60 | 24 | +10.3 | 2.24 |
+| 4h|adx_di25|both|s4_chand | 1.59 | 100 | +6.3 | 1.18 |
+
+Of 125 configs that passed train+validation, 88 are also profitable on the sealed test (70%); with >=30 test trades and PF>1.2: 30.
