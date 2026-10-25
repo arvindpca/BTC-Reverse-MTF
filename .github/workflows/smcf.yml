@@ -1,4 +1,4 @@
-name: Filter study: SMC + POC + volume on VWAP/RSI/MACD and S/R entries
+name: SMC filter study (BTC and PAXG)
 
 # Manual only. Fetches public 1h candles (years), finds hindsight swings, mines clue rules on train, tests once on unseen data,
 # and publishes the report to the 'smcf-results' branch. No orders, no secrets.
