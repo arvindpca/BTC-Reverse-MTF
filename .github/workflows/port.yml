@@ -1,0 +1,55 @@
+name: Multi-coin trend and momentum portfolio study
+
+# Manual only. Fetches public 1h candles (years), finds hindsight swings, mines clue rules on train, tests once on unseen data,
+# and publishes the report to the 'port-results' branch. No orders, no secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      assets:
+        description: "Binance symbols, space separated"
+        default: "BTCUSDT PAXGUSDT"
+      days:
+        description: "5m history in days (1800 = ~5 years)"
+        default: "3300"
+
+permissions:
+  contents: write
+
+jobs:
+  reverse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ASSETS: ${{ inputs.assets }}
+      DAYS: ${{ inputs.days }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run study
+        run: |
+          for v in "$DAYS"; do case "$v" in ''|*[!0-9]*) echo "numbers only"; exit 1;; esac; done
+          if ! [[ "$ASSETS" =~ ^[A-Z0-9\ ]+$ ]]; then echo "bad assets"; exit 1; fi
+          mkdir -p port_out
+          set -o pipefail
+          python -m app.portfolio_study --days "$DAYS" --out port_out 2>&1 | tee port_out/log.txt
+          cat port_out/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish report to the port-results branch
+        if: always()
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp -r port_out/. /tmp/pub/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan port-results
+          git rm -rfq .
+          git clean -fdxq
+          cp -r /tmp/pub/. .
+          git add -A
+          git commit -qm "portfolio study results (run $GITHUB_RUN_ID)"
+          git push -f origin port-results
