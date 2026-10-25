@@ -36,9 +36,12 @@ jobs:
         run: |
           for v in "$DAYS"; do case "$v" in ''|*[!0-9]*) echo "numbers only"; exit 1;; esac; done
           if ! [[ "$ASSETS" =~ ^[A-Z0-9\ ]+$ ]]; then echo "bad assets"; exit 1; fi
-          python -m app.btc_study --symbol "$ASSETS" --days "$DAYS" --out btc_out
+          mkdir -p btc_out
+          set -o pipefail
+          python -m app.btc_study --symbol "$ASSETS" --days "$DAYS" --out btc_out 2>&1 | tee btc_out/log.txt
           cat btc_out/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Publish report to the btc-results branch
+        if: always()
         run: |
           rm -rf /tmp/pub && mkdir /tmp/pub && cp -r btc_out/. /tmp/pub/
           git config user.name "github-actions[bot]"
