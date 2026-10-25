@@ -1,0 +1,52 @@
+name: PAXG 5-minute candle study
+
+# Manual only. Fetches public 5m candles and compares v2 with 5m variants;
+# and publishes the report to the 'm5-results' branch. No orders, no secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      assets:
+        description: "Binance symbols, space separated"
+        default: "PAXGUSDT"
+      days:
+        description: "History in days (1095 = 3 years)"
+        default: "1095"
+
+permissions:
+  contents: write
+
+jobs:
+  reverse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ASSETS: ${{ inputs.assets }}
+      DAYS: ${{ inputs.days }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run study
+        run: |
+          for v in "$DAYS"; do case "$v" in ''|*[!0-9]*) echo "numbers only"; exit 1;; esac; done
+          if ! [[ "$ASSETS" =~ ^[A-Z0-9\ ]+$ ]]; then echo "bad assets"; exit 1; fi
+          python -m app.m5 --symbol "$ASSETS" --days "$DAYS" --out m5_out
+          cat m5_out/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish report to the m5-results branch
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp -r m5_out/. /tmp/pub/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan m5-results
+          git rm -rfq .
+          git clean -fdxq
+          cp -r /tmp/pub/. .
+          git add -A
+          git commit -qm "PAXG 5m results (run $GITHUB_RUN_ID)"
+          git push -f origin m5-results
