@@ -158,8 +158,8 @@ def report(df5, label):
     for k in (0.0, 0.3, 0.6, 1.0):
         sd, st = sig_hybrid(df5, df1, a1_5, k); add(f"hyb dip {k:.1f} ATR", sd, st)
 
-    out += [f"# {label}: 5-minute candle study", "",
-            f"{len(df5)} 5m bars, {df5.index[0]:%Y-%m-%d} to {df5.index[-1]:%Y-%m-%d}. Costs: 0.06% fee + 0.02% slip per side; "
+    out += [f"# {label}: {60 // BARS_H}-minute candle study", "",
+            f"{len(df5)} {60 // BARS_H}m bars, {df5.index[0]:%Y-%m-%d} to {df5.index[-1]:%Y-%m-%d}. Costs: 0.06% fee + 0.02% slip per side; "
             f"harsh = 0.10% + 0.05%. R-based, 2% risk equity (x start).", "",
             "| variant | trades | win% | net R | avg R | PF | max DD R | t-stat | 2% equity (x) | DD% | net R third 1 / 2 / 3 | harsh-fee net R | harsh PF |",
             "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -176,9 +176,13 @@ def main():
     ap.add_argument("--symbol", default="PAXGUSDT")
     ap.add_argument("--days", type=int, default=1095)
     ap.add_argument("--out", default="m5_out")
+    ap.add_argument("--tf", type=int, default=5, help="candle minutes: 5 or 15")
     a = ap.parse_args()
+    global BARS_H, EP5
+    BARS_H = 60 // a.tf
+    EP5 = replace(re_.EP, max_hold=480 * BARS_H)
     Path(a.out).mkdir(exist_ok=True)
-    df5 = fetch_klines(a.symbol, "5m", a.days, 300_000)
+    df5 = fetch_klines(a.symbol, f"{a.tf}m", a.days, a.tf * 60_000)
     L, trades = report(df5, a.symbol)
     Path(a.out, "summary.md").write_text("\n".join(L))
     for k, (d, tr) in trades.items():
