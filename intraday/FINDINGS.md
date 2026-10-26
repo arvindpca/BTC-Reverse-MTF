@@ -13,7 +13,7 @@
 Rule chosen from cost arithmetic, not from TEST. Round-1 TEST had already been seen, so this TEST is not pristine.
 
 * Still **no CANDIDATE** on BTC or PAXG, 5m or 15m, LONG or SHORT.
-* Best DEV results are no better than random-entry searches of the same size (null percentile 0-90%, needs 95%).
+* Best DEV results are no better than random-entry searches of the same size (null percentile 0-75%, needs 95%).
 * "Enter every bar" baselines lose 0.13-0.56 R per trade on TEST after costs.
 
 ## Conclusion
