@@ -35,3 +35,15 @@ Same CoinDCX data, round-2 costs and min stop.
 * Some hours drift the same way in all three periods (e.g. BTC 01:30-02:30 IST up, PAXG 13:30-14:30 IST down),
   but the average move is 0.01-0.08% per hour, below the 0.16% round-trip cost. Not tradable alone.
 * Busiest hours (biggest moves): BTC 17:30-21:30 IST, PAXG 17:30-19:30 IST (US session open/data releases).
+
+## 1h / 4h study - 2026-10-26 (results branch `intraday-results-1h4h`)
+
+Fresh search on 1h and 4h (4h built from CoinDCX 1h candles). BTC: 3 years (2023-10 to 2026-10, 26,278 1h bars,
+0.008% missing). PAXG futures history on CoinDCX only goes back to ~2025-03 (578 days). Stops 1.5-4 ATR, holds 12-96h.
+
+* **0 CANDIDATE.** 23 of 24 finalists fail at least one check.
+* Closest: **BTC 1h LONG, strong green momentum candle + ADX > 25 + EMA20 > EMA50, stop 1.5 ATR, target 3R, 48h max.**
+  Passes every check except test size (26 trades, needs 30): dev +0.43R (66 trades), val +0.58R (28), test +0.26R
+  (PF 1.36), still +0.15R at 1.5x costs, walk-forward +6.4R with 67% positive folds, positive every calendar year,
+  search beats 95% of random searches. Median stop 0.98%. About 3 trades a month. -> watchlist / forward paper test only.
+* PAXG 1h/4h: nothing stable; the history is short and the test period (Jun-Oct 2026, PAXG -10%) differs from dev.
