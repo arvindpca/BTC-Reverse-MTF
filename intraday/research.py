@@ -59,7 +59,8 @@ class Study:
         key = (fam, side, sl, rr, hold_h)
         if key not in self.cache:
             m = (masks or self.fams)[fam][0 if side > 0 else 1]
-            self.cache[key] = candidates(self.bars, m, side, sl, rr, self.holds[hold_h], self.cfg["warmup_bars"])
+            self.cache[key] = candidates(self.bars, m, side, sl, rr, self.holds[hold_h], self.cfg["warmup_bars"],
+                                          self.cfg.get("min_stop_pct", 0.0))
         return self.cache[key]
 
     def keep_mask(self, cand, side, flt_names):
@@ -155,7 +156,7 @@ def run_study(f: pd.DataFrame, tf: str, cfg: dict, out: Path, log, label: str) -
             for side in (1, -1):
                 for sl, rr, hh in st.exits():
                     cand = candidates(st.bars, masks[fam][0 if side > 0 else 1], side, sl, rr, st.holds[hh],
-                                      cfg["warmup_bars"])
+                                      cfg["warmup_bars"], cfg.get("min_stop_pct", 0.0))
                     _, _, R, gR, seg = st.trades(cand)
                     m = seg == 0
                     if m.sum() >= mdev:
@@ -201,7 +202,7 @@ def run_study(f: pd.DataFrame, tf: str, cfg: dict, out: Path, log, label: str) -
            "segments": {name: [str(f.index[st.cuts[i]]), str(f.index[st.cuts[i + 1] - 1])] for i, name in enumerate(SEGS)},
            "buy_hold_pct": bh, "configs_tested": int(len(E)), "null_best_dev_t": null_best.round(2).tolist(),
            "real_best_stageA_dev_t": round(float(a_best), 2), "real_beats_null_pct": null_pct,
-           "cost_per_side_pct": round(st.cost, 4), "finalists": results, "baseline_every_bar": base_rows,
+           "cost_per_side_pct": round(st.cost, 4), "min_stop_pct": cfg.get("min_stop_pct", 0.0), "finalists": results, "baseline_every_bar": base_rows,
            "runtime_s": round(time.time() - t0, 1)}
     (out / "result.json").write_text(json.dumps(res, indent=2, default=_json))
     (out / "summary.md").write_text(summary_md(res))
@@ -327,7 +328,7 @@ def walk_forward(st: Study, fam, side, flt) -> dict:
 def summary_md(res: dict) -> str:
     L = [f"## {res['label']}", "",
          f"{res['bars']} bars, {res['first'][:16]} to {res['last'][:16]} UTC. Costs {res['cost_per_side_pct']}% per side "
-         f"(+funding). {res['configs_tested']} configs searched.", "",
+         f"(+funding). {res['configs_tested']} configs searched. Min stop {res.get('min_stop_pct', 0)}%.", "",
          "| segment | from | to | buy & hold |", "|---|---|---|---|"]
     for s, (a, b) in res["segments"].items():
         L.append(f"| {s} | {a[:16]} | {b[:16]} | {res['buy_hold_pct'][s]}% |")
@@ -437,7 +438,7 @@ def main(argv=None):
 
 def overall_md(cfg, args, quality, results, blockers) -> str:
     L = ["# CoinDCX futures intraday research: BTC + PAXG (5m / 15m)", "",
-         f"Source: **{args.source}**. Run at {pd.Timestamp.now(tz='UTC'):%Y-%m-%d %H:%M} UTC. Research only, no orders.", ""]
+         f"Round: **{cfg.get('round', '')}**. Source: **{args.source}**. Run at {pd.Timestamp.now(tz='UTC'):%Y-%m-%d %H:%M} UTC. Research only, no orders.", ""]
     if args.source == "synthetic":
         L += ["> SYNTHETIC DATA: this run only checks that the pipeline works. Its numbers mean nothing.", ""]
     if blockers:

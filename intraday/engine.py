@@ -50,10 +50,12 @@ class Candidates:
 
 
 def candidates(b: Bars, sig_mask: np.ndarray, side: int, sl_atr: float, rr: float, hold: int,
-               warmup: int = 0) -> Candidates:
+               warmup: int = 0, min_stop_pct: float = 0.0) -> Candidates:
     n = len(b.o)
     sig = np.flatnonzero(sig_mask[: n - 1])
     sig = sig[(sig >= warmup) & np.isfinite(b.atr[sig]) & (b.atr[sig] > 0)]
+    # skip setups whose stop is so tight that costs eat the trade (checked with the signal bar close: no lookahead)
+    sig = sig[sl_atr * b.atr[sig] / b.c[sig] * 100 >= min_stop_pct]
     e = sig + 1
     entry = b.o[e]
     d = sl_atr * b.atr[sig]

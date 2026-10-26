@@ -24,9 +24,14 @@ DEFAULTS: dict = {
     "split": [0.50, 0.25, 0.25],
     "warmup_bars": 300,
     # Exit grid (ATR based stop, reward multiple, time stop in hours)
-    "sl_atr": [1.0, 2.0, 3.0],
+    # Round 1 (2026-10-26) used sl_atr [1,2,3], holds [3,8]h and no minimum stop: costs ate tight stops
+    # (PAXG 5m median stop 0.22% vs 0.158% round-trip cost). Round 2 rule, set from cost arithmetic, not from TEST:
+    # stop must be >= 0.25% of price (cost <= ~0.6R) and the grid allows wider stops / longer holds.
+    "round": "2 (min stop 0.25%, wider exits; round-1 TEST was already viewed, so TEST here is not pristine)",
+    "min_stop_pct": 0.25,
+    "sl_atr": [2.0, 3.0, 5.0],
     "rr": [1.0, 1.5, 2.0, 3.0],
-    "max_hold_hours": [3, 8],
+    "max_hold_hours": [4, 12],
     # Selection
     "min_trades_dev": 40,
     "min_trades_val": 20,

@@ -219,3 +219,12 @@ def test_end_to_end_coindcx_path_with_fake_exchange():
             assert (Path(d) / "summary.md").exists() and (Path(d) / "config.json").exists()
     finally:
         D.requests.Session = real
+
+
+def test_min_stop_filter_uses_signal_close():
+    f = _frame([[100, 100, 100, 100]] * 10)          # atr 1 -> stop 1% at sl_atr 1
+    m = np.zeros(10, bool)
+    m[2] = True
+    b = Bars.from_frame(f, 15)
+    assert len(candidates(b, m, 1, 1.0, 2.0, 3, min_stop_pct=0.5).sig) == 1
+    assert len(candidates(b, m, 1, 1.0, 2.0, 3, min_stop_pct=1.5).sig) == 0
