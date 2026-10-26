@@ -1,0 +1,27 @@
+BTC: B-BTC_USDT listed on CoinDCX futures (504 active USDT pairs)
+BTC 5m: data
+  quality WARN: 180.0d, 51840 bars, missing 0.0% ['22 extreme-return bars (kept, flagged)']
+  [BTC 5m] stage A: 768 configs (4s)
+  [BTC 5m] stages B/C done: 1608 configs total (5s)
+  [BTC 5m] null control done (22s)
+  [BTC 5m] done in 22s
+BTC 15m: data
+  quality WARN: 179.99d, 17280 bars, missing 0.0% ['7 extreme-return bars (kept, flagged)']
+  [BTC 15m] stage A: 768 configs (1s)
+  [BTC 15m] stages B/C done: 1461 configs total (1s)
+  [BTC 15m] null control done (8s)
+  [BTC 15m] done in 8s
+PAXG: B-PAXG_USDT listed on CoinDCX futures (504 active USDT pairs)
+PAXG 5m: data
+  quality WARN: 180.0d, 51840 bars, missing 0.0% ['33 extreme-return bars (kept, flagged)']
+  [PAXG 5m] stage A: 768 configs (4s)
+  [PAXG 5m] stages B/C done: 1608 configs total (4s)
+  [PAXG 5m] null control done (22s)
+  [PAXG 5m] done in 22s
+PAXG 15m: data
+  quality WARN: 179.99d, 17280 bars, missing 0.0% ['11 extreme-return bars (kept, flagged)']
+  [PAXG 15m] stage A: 768 configs (1s)
+  [PAXG 15m] stages B/C done: 1510 configs total (1s)
+  [PAXG 15m] null control done (8s)
+  [PAXG 15m] done in 8s
+ALL DONE

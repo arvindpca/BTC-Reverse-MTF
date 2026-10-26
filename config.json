@@ -1,0 +1,63 @@
+{
+  "exchange": "CoinDCX",
+  "market": "USDT-margined perpetual futures (pcode=f)",
+  "symbols": {
+    "BTC": "B-BTC_USDT",
+    "PAXG": "B-PAXG_USDT"
+  },
+  "timeframes": [
+    "5m",
+    "15m"
+  ],
+  "days": 180,
+  "fee_per_side_pct": 0.05,
+  "gst_on_fee": 0.18,
+  "slippage_per_side_pct": 0.02,
+  "funding_pct_per_8h": 0.01,
+  "cost_multipliers": [
+    0.0,
+    0.5,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "split": [
+    0.5,
+    0.25,
+    0.25
+  ],
+  "warmup_bars": 300,
+  "sl_atr": [
+    1.0,
+    2.0,
+    3.0
+  ],
+  "rr": [
+    1.0,
+    1.5,
+    2.0,
+    3.0
+  ],
+  "max_hold_hours": [
+    3,
+    8
+  ],
+  "min_trades_dev": 40,
+  "min_trades_val": 20,
+  "min_trades_test": 30,
+  "top_base_per_dir": 10,
+  "pair_filters_per_base": 6,
+  "finalists_per_dir": 3,
+  "null_seeds": 20,
+  "wf_train_days": 60,
+  "wf_test_days": 20,
+  "start_equity": 1000.0,
+  "risk_per_trade": 0.01,
+  "leverage_cap": 30,
+  "verdict": {
+    "test_pf_min": 1.15,
+    "wf_pos_folds_min": 0.5,
+    "null_pct_min": 0.95
+  },
+  "seed": 7
+}

@@ -1,0 +1,13 @@
+{
+  "pair": "B-BTC_USDT",
+  "tf": "15m",
+  "requested_days": 180,
+  "api_calls": 18,
+  "source": "https://public.coindcx.com/market_data/candlesticks",
+  "pcode": "f",
+  "fetched_at_utc": "2026-10-26T19:27:19.388742+00:00",
+  "rows_raw": 17280,
+  "first": "2026-04-29 19:15:00+00:00",
+  "last": "2026-10-26 19:00:00+00:00",
+  "forming_bar_excluded_from": "2026-10-26 19:15:00+00:00"
+}

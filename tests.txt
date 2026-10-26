@@ -1,0 +1,62 @@
+..................                                                       [100%]
+=============================== warnings summary ===============================
+tests/test_intraday.py::test_clean_dupes_invalid_gaps_utc
+tests/test_intraday.py::test_fetch_pagination_full_coverage_and_forming_bar_excluded
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/intraday/clean.py:16: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    step = pd.Timedelta(minutes=TF_MIN[tf])
+
+tests/test_intraday.py::test_clean_dupes_invalid_gaps_utc
+tests/test_intraday.py::test_fetch_pagination_full_coverage_and_forming_bar_excluded
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/intraday/clean.py:21: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    secs = np.asarray((df.index - pd.Timestamp(0, tz="UTC")) // pd.Timedelta(seconds=1), dtype="int64")
+
+tests/test_intraday.py::test_clean_dupes_invalid_gaps_utc
+tests/test_intraday.py::test_fetch_pagination_full_coverage_and_forming_bar_excluded
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+tests/test_intraday.py::test_end_to_end_coindcx_path_with_fake_exchange
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/intraday/clean.py:43: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    rep["coverage_days"] = round((df.index[-1] - df.index[0]) / pd.Timedelta(days=1), 2)
+
+tests/test_intraday.py: 20 warnings
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/intraday/features.py:49: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    vals.index = h.index + pd.Timedelta(minutes=minutes)            # HTF close time
+
+tests/test_intraday.py: 20 warnings
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/intraday/features.py:50: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    base_close = base.index + pd.Timedelta(minutes=TF_MIN[tf])
+
+tests/test_intraday.py::test_htf_value_uses_only_closed_bars
+tests/test_intraday.py::test_htf_value_uses_only_closed_bars
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/tests/test_intraday.py:118: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    t1030, t1045 = day + pd.Timedelta("10h30min"), day + pd.Timedelta("10h45min")
+
+tests/test_intraday.py::test_htf_value_uses_only_closed_bars
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/tests/test_intraday.py:119: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    trunc_1100 = build(df.loc[: day + pd.Timedelta("10h45min")], "15m")
+
+tests/test_intraday.py::test_htf_value_uses_only_closed_bars
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/tests/test_intraday.py:120: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    trunc_1045 = build(df.loc[: day + pd.Timedelta("10h30min")], "15m")
+
+tests/test_intraday.py::test_reproducible_study
+tests/test_intraday.py::test_reproducible_study
+tests/test_intraday.py::test_reproducible_study
+tests/test_intraday.py::test_reproducible_study
+  /home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/intraday/research.py:252: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+    "exit_time": f.index[cand.exit_bar[taken]] + pd.Timedelta(minutes=TF_MIN[st.tf]),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+18 passed, 69 warnings in 2.83s
