@@ -47,3 +47,17 @@ Fresh search on 1h and 4h (4h built from CoinDCX 1h candles). BTC: 3 years (2023
   (PF 1.36), still +0.15R at 1.5x costs, walk-forward +6.4R with 67% positive folds, positive every calendar year,
   search beats 95% of random searches. Median stop 0.98%. About 3 trades a month. -> watchlist / forward paper test only.
 * PAXG 1h/4h: nothing stable; the history is short and the test period (Jun-Oct 2026, PAXG -10%) differs from dev.
+
+## BTC 1h loss study - 2026-10-26 (`intraday/loss_study.py`, files in `intraday/reports/btc1h_loss_study/`)
+
+Setup: BTC 1h LONG momentum candle + ADX > 25 + EMA20 > EMA50, stop 1.5 ATR, target 3R, 48h.
+Losers vs winners compared on DEV only; filters picked on DEV + VAL; 30 random-noise "features" searched the same way.
+
+* DEV losses: 36 stop-outs (-41.7R) vs 23 targets (+65.0R). Entries 18:00-24:00 IST lost (-0.09R avg, 31 trades);
+  other hours +0.8 to +1.1R. Losers came after smaller 24h/72h rallies and slightly higher volatility.
+* Chosen filter (best on DEV + VAL): skip when volatility is > 1.3x its usual level. DEV +0.43 -> +0.63R,
+  VAL +0.58 -> +0.91R, but TEST +0.26 -> +0.14R. It did not help on new data.
+* Diagnostic, TEST of other top filters: 3 of 7 better than no filter, 4 worse; average TEST sum below the base.
+  "Skip 18:30-24:00 IST" was best on TEST (+0.70R, 17 trades) but worse than base on VAL.
+* Noise features reached scores up to 1.92 vs 2.11 for the best real filter: most of the gain is what luck also gives.
+* Decision: keep the base setup unfiltered. Track the entry hour during paper trading to re-check the evening effect.
