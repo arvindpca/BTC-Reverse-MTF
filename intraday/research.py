@@ -423,9 +423,10 @@ def main(argv=None):
             log(f"{asset} {tf}: data")
             try:
                 df, rep = prepare(asset, pair, tf, C.for_tf(cfg, tf), args, out, log)
-            except DataError as exc:
-                log(f"BLOCKER {asset} {tf}: {exc}")
-                blockers.append(f"{asset} {tf}: {exc}")
+            except Exception as exc:  # one bad market/timeframe must not stop the others
+                import traceback
+                log(f"BLOCKER {asset} {tf}: {exc!r}\n{traceback.format_exc()}")
+                blockers.append(f"{asset} {tf}: {exc!r}")
                 continue
             quality.append(rep)
             log(f"  quality {rep['status']}: {rep['coverage_days']}d, {rep['rows_clean']} bars, missing {rep['missing_pct']}% {rep['issues']}")
@@ -438,7 +439,12 @@ def main(argv=None):
                 log(f"  {asset} {tf}: only {len(df)} bars, skipped")
                 continue
             feats = build(df, tf)
-            results.append(run_study(feats, tf, C.for_tf(cfg, tf), out / asset / tf, log, f"{asset} {tf}"))
+            try:
+                results.append(run_study(feats, tf, ctf, out / asset / tf, log, f"{asset} {tf}"))
+            except Exception as exc:
+                import traceback
+                log(traceback.format_exc())
+                blockers.append(f"{asset} {tf}: research crashed: {exc!r}")
     (out / "data_quality.json").write_text(json.dumps(quality, indent=2, default=_json))
     (out / "summary.json").write_text(json.dumps({"blockers": blockers, "results": results}, indent=2, default=_json))
     (out / "summary.md").write_text(overall_md(cfg, args, quality, results, blockers))

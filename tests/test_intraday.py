@@ -245,3 +245,33 @@ def test_4h_built_from_smaller_candles_and_tf_overrides():
             assert q[1]["tf"] == "4h" and q[1]["derived_from"] == "5m" and q[1]["missing_bars"] == 0
     finally:
         D.requests.Session = real
+
+
+def test_parse_candles_rejects_or_empties_odd_responses():
+    assert len(parse_candles({"s": "ok", "data": []})) == 0
+    assert len(parse_candles({})) == 0
+    for bad in ({"status": "error", "message": "invalid range"}, {"data": "oops"}, [{"open": 1}]):
+        try:
+            parse_candles(bad)
+        except DataError:
+            continue
+        raise AssertionError(f"accepted {bad}")
+
+
+class ErrorAfterSession(FakeSession):
+    """Serves recent pages, then an error dict for older history (like a pair listed recently)."""
+    def __init__(self, cutoff_s, **kw):
+        super().__init__(**kw)
+        self.cutoff = cutoff_s
+
+    def get(self, url, params=None, timeout=None):
+        if "candlesticks" in url and params["to"] < self.cutoff:
+            return FakeResp({"status": "error", "message": "no data before listing"})
+        return super().get(url, params, timeout)
+
+
+def test_fetch_stops_cleanly_at_listing_date():
+    now = 1_760_000_000
+    raw, meta = fetch_candles("B-PAXG_USDT", "5m", 5, session=ErrorAfterSession(now - 2 * 86400, cap=300),
+                              now_s=now, pause=0)
+    assert len(raw) >= 2 * 288 - 300 and raw.index[0] > pd.Timestamp(now - 3 * 86400, unit="s", tz="UTC")

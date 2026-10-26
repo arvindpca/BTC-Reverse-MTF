@@ -44,18 +44,40 @@ def _get_json(session, url, params, *, tries=5, log=print):
 
 
 def parse_candles(js) -> pd.DataFrame:
-    """Accepts {'s':'ok','data':[{...}]} or a bare list of dicts / lists."""
-    data = js.get("data", js) if isinstance(js, dict) else js
+    """Accepts {'s':'ok','data':[{...}]} or a bare list of dicts / lists. Anything else -> DataError."""
+    empty = pd.DataFrame(columns=["open", "high", "low", "close", "volume"],
+                         index=pd.DatetimeIndex([], tz="UTC", name="open_time"))
+    if isinstance(js, dict):
+        data = js.get("data")
+        if data is None:
+            if not js or str(js.get("s", "")).lower() in ("ok", "no_data"):
+                return empty
+            raise DataError(f"unexpected candle response: {str(js)[:200]}")
+    else:
+        data = js
+    if not isinstance(data, list):
+        raise DataError(f"unexpected candle payload type {type(data).__name__}: {str(data)[:200]}")
     if not data:
-        return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
-    if isinstance(data[0], dict):
-        df = pd.DataFrame(data)
-        tcol = next(c for c in ("time", "t", "timestamp", "open_time") if c in df.columns)
-        ts = df[tcol].astype("int64")
-    else:  # [time, open, high, low, close, volume]
-        df = pd.DataFrame(data).iloc[:, :6]
-        df.columns = ["time", "open", "high", "low", "close", "volume"]
-        ts = df["time"].astype("int64")
+        return empty
+    try:
+        if isinstance(data[0], dict):
+            df = pd.DataFrame(data)
+            tcol = next((c for c in ("time", "t", "timestamp", "open_time") if c in df.columns), None)
+            if tcol is None:
+                raise DataError(f"candles without a time field: {list(df.columns)}")
+            ts = pd.to_numeric(df[tcol], errors="coerce")
+        else:  # [time, open, high, low, close, volume]
+            df = pd.DataFrame(data).iloc[:, :6]
+            df.columns = ["time", "open", "high", "low", "close", "volume"][: df.shape[1]]
+            ts = pd.to_numeric(df["time"], errors="coerce")
+        for c in ("open", "high", "low", "close", "volume"):
+            df[c] = pd.to_numeric(df[c], errors="coerce") if c in df.columns else float("nan")
+    except (KeyError, IndexError, TypeError, ValueError) as exc:
+        raise DataError(f"could not parse candles: {exc!r}") from exc
+    keep = ts.notna().values
+    df, ts = df[keep], ts[keep].astype("int64")
+    if not len(df):
+        return empty
     unit = "ms" if ts.iloc[0] > 1e11 else "s"
     out = df[["open", "high", "low", "close", "volume"]].astype(float)
     out.index = pd.to_datetime(ts.values, unit=unit, utc=True)
@@ -94,10 +116,17 @@ def fetch_candles(pair: str, tf: str, days: int, *, session=None, now_s: int | N
     frames, calls, empty, cur_end = [], 0, 0, end
     while cur_end > start:
         cur_start = max(start, cur_end - chunk_bars * step)
-        js = _get_json(session, CANDLES_URL, {"pair": pair, "from": cur_start, "to": cur_end - 1,
-                                              "resolution": RESOLUTION[tf], "pcode": "f"}, log=log)
-        calls += 1
-        df = parse_candles(js)
+        try:
+            js = _get_json(session, CANDLES_URL, {"pair": pair, "from": cur_start, "to": cur_end - 1,
+                                                  "resolution": RESOLUTION[tf], "pcode": "f"}, log=log)
+            calls += 1
+            df = parse_candles(js)
+        except DataError as exc:
+            if not frames:
+                raise
+            # older pages failing after we already have recent data = the pair's history starts here
+            log(f"  {pair} {tf}: stopped paging at {pd.Timestamp(cur_end, unit='s', tz='UTC')}: {exc}")
+            break
         df = df[(df.index >= pd.Timestamp(cur_start, unit="s", tz="UTC")) &
                 (df.index < pd.Timestamp(cur_end, unit="s", tz="UTC"))]
         if len(df):
