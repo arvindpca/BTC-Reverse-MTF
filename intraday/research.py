@@ -20,7 +20,7 @@ import pandas as pd
 
 from . import config as C
 from .clean import clean, quality_verdict
-from .data import TF_MIN, DataError, check_instrument, fetch_candles, load_csv, save_raw
+from .data import RESOLUTION, TF_MIN, DataError, check_instrument, fetch_candles, load_csv, save_raw
 from .engine import Bars, candidates, net_returns, select
 from .features import build
 from .metrics import equity_curve, stats
@@ -354,21 +354,25 @@ def prepare(asset, pair, tf, cfg, args, out: Path, log):
     raw_dir, clean_dir = out / "data" / "raw", out / "data" / "clean"
     derived, raw = False, None
     if args.source == "coindcx":
-        try:
-            raw, meta = fetch_candles(pair, tf, cfg["days"], log=log)
-            save_raw(raw, meta, raw_dir)
-            _, chk = clean(raw, tf)
-            bad = chk["off_grid_timestamps"] > 0.2 * max(chk["rows_raw"], 1) or chk["missing_pct"] > 5
-        except DataError as exc:
-            log(f"  direct {tf} fetch failed: {exc}")
-            bad = True
-        f5 = raw_dir / f"{pair}_5m_raw.csv.gz"
-        if bad and tf != "5m" and f5.exists():
-            # Same pair, same exchange: aggregate CoinDCX 5m candles into the larger bar. Logged, not silent.
+        bad = True
+        if tf in RESOLUTION:
+            try:
+                raw, meta = fetch_candles(pair, tf, cfg["days"], log=log)
+                save_raw(raw, meta, raw_dir)
+                _, chk = clean(raw, tf)
+                bad = chk["off_grid_timestamps"] > 0.2 * max(chk["rows_raw"], 1) or chk["missing_pct"] > 5
+            except DataError as exc:
+                log(f"  direct {tf} fetch failed: {exc}")
+        if bad:
+            # Same pair, same exchange: aggregate smaller CoinDCX candles into the larger bar. Logged, not silent.
             from .clean import resample
-            log(f"  {tf}: direct candles unusable -> built from CoinDCX {pair} 5m candles")
-            raw = resample(clean(load_csv(f5), "5m")[0], f"{TF_MIN[tf]}min")
-            derived = True
+            for base in ("1h", "15m", "5m"):
+                fb = raw_dir / f"{pair}_{base}_raw.csv.gz"
+                if TF_MIN[base] < TF_MIN[tf] and TF_MIN[tf] % TF_MIN[base] == 0 and fb.exists():
+                    log(f"  {tf}: built from CoinDCX {pair} {base} candles")
+                    raw = resample(clean(load_csv(fb), base)[0], f"{TF_MIN[tf]}min")
+                    derived = base
+                    break
         if raw is None:
             raise DataError(f"{pair} {tf}: no usable candles")
     elif args.source == "csv":
@@ -379,7 +383,7 @@ def prepare(asset, pair, tf, cfg, args, out: Path, log):
     df, rep = clean(raw, tf)
     rep["status"], rep["issues"] = quality_verdict(rep, cfg["days"])
     rep["asset"], rep["pair"], rep["source"] = asset, pair, args.source
-    rep["derived_from_5m"] = derived
+    rep["derived_from"] = derived or "direct"
     clean_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(clean_dir / f"{pair}_{tf}_clean.csv.gz")
     return df, rep
@@ -418,7 +422,7 @@ def main(argv=None):
         for tf in cfg["timeframes"]:
             log(f"{asset} {tf}: data")
             try:
-                df, rep = prepare(asset, pair, tf, cfg, args, out, log)
+                df, rep = prepare(asset, pair, tf, C.for_tf(cfg, tf), args, out, log)
             except DataError as exc:
                 log(f"BLOCKER {asset} {tf}: {exc}")
                 blockers.append(f"{asset} {tf}: {exc}")
@@ -428,8 +432,13 @@ def main(argv=None):
             if rep["status"] == "POOR":
                 blockers.append(f"{asset} {tf}: data quality POOR, research skipped ({rep['issues']})")
                 continue
+            ctf = C.for_tf(cfg, tf)
+            if len(df) < 2 * ctf["warmup_bars"] + 400:
+                blockers.append(f"{asset} {tf}: only {len(df)} bars, too few to research")
+                log(f"  {asset} {tf}: only {len(df)} bars, skipped")
+                continue
             feats = build(df, tf)
-            results.append(run_study(feats, tf, cfg, out / asset / tf, log, f"{asset} {tf}"))
+            results.append(run_study(feats, tf, C.for_tf(cfg, tf), out / asset / tf, log, f"{asset} {tf}"))
     (out / "data_quality.json").write_text(json.dumps(quality, indent=2, default=_json))
     (out / "summary.json").write_text(json.dumps({"blockers": blockers, "results": results}, indent=2, default=_json))
     (out / "summary.md").write_text(overall_md(cfg, args, quality, results, blockers))

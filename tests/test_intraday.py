@@ -214,7 +214,7 @@ def test_end_to_end_coindcx_path_with_fake_exchange():
         with tempfile.TemporaryDirectory() as d:
             main(["--out", d, "--assets", "PAXG", "--days", "12", "--null-seeds", "1"])
             q = json.loads((Path(d) / "data_quality.json").read_text())
-            assert [x["tf"] for x in q] == ["5m", "15m"] and q[1]["derived_from_5m"] is True
+            assert [x["tf"] for x in q] == ["5m", "15m"] and q[1]["derived_from"] == "5m"
             assert (Path(d) / "data" / "raw" / "B-PAXG_USDT_5m_raw.csv.gz").exists()
             assert (Path(d) / "summary.md").exists() and (Path(d) / "config.json").exists()
     finally:
@@ -228,3 +228,20 @@ def test_min_stop_filter_uses_signal_close():
     b = Bars.from_frame(f, 15)
     assert len(candidates(b, m, 1, 1.0, 2.0, 3, min_stop_pct=0.5).sig) == 1
     assert len(candidates(b, m, 1, 1.0, 2.0, 3, min_stop_pct=1.5).sig) == 0
+
+
+def test_4h_built_from_smaller_candles_and_tf_overrides():
+    import json
+    import intraday.data as D
+    from intraday.research import main
+    cfg = C.for_tf(C.load(), "4h")
+    assert cfg["max_hold_hours"] == [24, 96] and C.load()["max_hold_hours"] == [4, 12]
+    real = D.requests.Session
+    D.requests.Session = lambda: FakeSession(cap=500, listed=("B-PAXG_USDT", "B-BTC_USDT"))
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            main(["--out", d, "--assets", "BTC", "--days", "12", "--null-seeds", "1", "--timeframes", "5m", "4h"])
+            q = json.loads((Path(d) / "data_quality.json").read_text())
+            assert q[1]["tf"] == "4h" and q[1]["derived_from"] == "5m" and q[1]["missing_bars"] == 0
+    finally:
+        D.requests.Session = real

@@ -22,7 +22,7 @@ concurrency:
 jobs:
   research:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       DAYS: ${{ inputs.days || '180' }}
     steps:
@@ -43,18 +43,22 @@ jobs:
       - name: Research (CoinDCX data)
         run: |
           case "$DAYS" in ''|*[!0-9]*) echo "days must be a number"; exit 1;; esac
-          python -m intraday.research --out intraday_out --days "$DAYS" || echo "RESEARCH EXITED WITH ERROR $?" >> intraday_out/run_log.txt
+          ARGS=""
+          if [ -f intraday/run_config.json ]; then ARGS="--config intraday/run_config.json"; else ARGS="--days $DAYS"; fi
+          python -m intraday.research --out intraday_out $ARGS || echo "RESEARCH EXITED WITH ERROR $?" >> intraday_out/run_log.txt
           cat intraday_out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
       - name: Publish to the intraday-results branch
         if: always()
         run: |
+          BR=$(python -c "import json,os; p='intraday/run_config.json'; print(json.load(open(p)).get('results_branch','intraday-results') if os.path.exists(p) else 'intraday-results')")
+          case "$BR" in intraday-results*) ;; *) echo "bad branch name"; exit 1;; esac
           rm -rf /tmp/pub && mkdir /tmp/pub && cp -r intraday_out/. /tmp/pub/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -q --orphan intraday-results
+          git checkout -q --orphan "$BR"
           git rm -rfq .
           git clean -fdxq
           cp -r /tmp/pub/. .
           git add -A
           git commit -qm "Intraday research results (run $GITHUB_RUN_ID)"
-          git push -f origin intraday-results
+          git push -f origin "$BR"

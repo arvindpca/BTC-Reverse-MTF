@@ -1,0 +1,6 @@
+{
+  "days": 1095,
+  "timeframes": ["1h", "4h"],
+  "results_branch": "intraday-results-1h4h",
+  "round": "1h/4h study (fresh search on 1h and 4h bars; 5m/15m results were not used to pick anything here)"
+}

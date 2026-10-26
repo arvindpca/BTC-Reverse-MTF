@@ -50,7 +50,20 @@ DEFAULTS: dict = {
     # Verdict thresholds
     "verdict": {"test_pf_min": 1.15, "wf_pos_folds_min": 0.5, "null_pct_min": 0.95},
     "seed": 7,
+    # Per-timeframe settings (merged over the top-level ones). Slow bars need longer holds and longer
+    # walk-forward windows; history is longer for 1h/4h so they still get enough trades.
+    "tf_overrides": {
+        "1h": {"sl_atr": [1.5, 2.5, 4.0], "max_hold_hours": [12, 48], "wf_train_days": 180, "wf_test_days": 60},
+        "4h": {"sl_atr": [1.5, 2.5, 4.0], "max_hold_hours": [24, 96], "wf_train_days": 365, "wf_test_days": 90,
+               "warmup_bars": 250, "min_trades_dev": 30, "min_trades_val": 15, "min_trades_test": 20},
+    },
 }
+
+
+def for_tf(cfg: dict, tf: str) -> dict:
+    out = deepcopy(cfg)
+    out.update(cfg.get("tf_overrides", {}).get(tf, {}))
+    return out
 
 
 def load(path: str | Path | None = None, **overrides) -> dict:
