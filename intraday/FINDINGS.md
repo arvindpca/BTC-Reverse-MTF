@@ -24,3 +24,14 @@ The existing 1h PAXG candidate (paper-trading job) is a different, slower strate
 
 Next experiments worth doing (each with its own untouched data): 1h / 4h bars where cost is a small share of the move,
 maker (limit) entries if fees are lower, and re-running frozen finalists on data after 2026-10-26 as a forward test.
+
+## Time-window study - 2026-10-26 (`intraday/time_study.py`, report in `intraday/reports/`)
+
+Only filter = entry time window (4/6/8 hours, any start), chosen on DEV, ranked on VAL, TEST checked once.
+Same CoinDCX data, round-2 costs and min stop.
+
+* **0 CANDIDATE** in 24 finalists (BTC/PAXG x 5m/15m x LONG/SHORT). Every finalist lost money on TEST.
+* Windows that looked best on DEV changed on VAL and TEST: no stable "best time".
+* Some hours drift the same way in all three periods (e.g. BTC 01:30-02:30 IST up, PAXG 13:30-14:30 IST down),
+  but the average move is 0.01-0.08% per hour, below the 0.16% round-trip cost. Not tradable alone.
+* Busiest hours (biggest moves): BTC 17:30-21:30 IST, PAXG 17:30-19:30 IST (US session open/data releases).
