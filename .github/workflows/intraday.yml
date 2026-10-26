@@ -1,0 +1,60 @@
+name: Intraday futures research (CoinDCX BTC + PAXG, 5m/15m)
+
+# Research only: public CoinDCX market data, no orders, no secrets. Does not touch the PAXG paper-trading job.
+# Results (data, quality report, experiments, trades, summary) are published to the 'intraday-results' branch.
+on:
+  push:
+    branches: [research/coindcx-intraday-futures]
+    paths: ["intraday/**", "tests/test_intraday.py", ".github/workflows/intraday.yml"]
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "History in days"
+        default: "180"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: intraday-research
+  cancel-in-progress: true
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      DAYS: ${{ inputs.days || '180' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Tests
+        run: |
+          mkdir -p intraday_out
+          PYTEST_FAST=1 python -m pytest -q tests/test_intraday.py 2>&1 | tee intraday_out/tests.txt
+          test ${PIPESTATUS[0]} -eq 0
+      - name: Research (CoinDCX data)
+        run: |
+          case "$DAYS" in ''|*[!0-9]*) echo "days must be a number"; exit 1;; esac
+          python -m intraday.research --out intraday_out --days "$DAYS" || echo "RESEARCH EXITED WITH ERROR $?" >> intraday_out/run_log.txt
+          cat intraday_out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Publish to the intraday-results branch
+        if: always()
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp -r intraday_out/. /tmp/pub/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan intraday-results
+          git rm -rfq .
+          git clean -fdxq
+          cp -r /tmp/pub/. .
+          git add -A
+          git commit -qm "Intraday research results (run $GITHUB_RUN_ID)"
+          git push -f origin intraday-results
