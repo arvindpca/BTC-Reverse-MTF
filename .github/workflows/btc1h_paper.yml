@@ -1,0 +1,70 @@
+name: BTC 1h paper trading (log only)
+
+# Paper log of the BTC 1h momentum setup (intraday/paper_btc1h.py). Public CoinDCX candles only, places NO orders.
+# Started by btc1h_clock.yml every hour (cron below is only a backup). State + report live on 'btc1h-paper-state'.
+# Separate from the PAXG paper job (paper.yml), which is not touched.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      test_telegram:
+        description: "Send a test Telegram message and stop"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: btc1h-paper
+  cancel-in-progress: false
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Telegram test
+        if: ${{ inputs.test_telegram }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "from app.notify import send_telegram as s; ok=s('BTC 1h paper trade: Telegram test OK.'); print('sent' if ok else 'NOT sent'); raise SystemExit(0 if ok else 1)"
+      - name: Restore state
+        run: |
+          mkdir -p paper_btc1h
+          if git fetch -q origin btc1h-paper-state 2>/dev/null; then
+            git show origin/btc1h-paper-state:state.json > paper_btc1h/state.json 2>/dev/null || rm -f paper_btc1h/state.json
+          fi
+      - name: Run paper log
+        if: ${{ !inputs.test_telegram }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -m intraday.paper_btc1h --state paper_btc1h/state.json --out paper_btc1h
+          cat paper_btc1h/report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish state and report
+        if: ${{ !inputs.test_telegram }}
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp -r paper_btc1h/. /tmp/pub/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan btc1h-paper-state
+          git rm -rfq .
+          git clean -fdxq
+          cp -r /tmp/pub/. .
+          git add -A
+          git commit -qm "BTC 1h paper log $(date -u +%FT%H:%MZ)"
+          git push -f origin btc1h-paper-state
