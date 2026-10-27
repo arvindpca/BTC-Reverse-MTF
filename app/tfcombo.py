@@ -154,7 +154,8 @@ def find_setups(D, use_bias=True, eql_only=False, win=16, tol=0.0010, max_age_da
 
 
 def simulate(setups, m5, D, entry="mkt", tp="2", fee=0.0008, buf=0.0005, rmin=0.002, rmax=0.03,
-             pb_valid=24, max_hold=576):
+             pb_valid=24, max_hold=576, window=None):
+    """window: list of (start_min, end_min) in IST (UTC+5:30); a setup is taken only if its 15m signal closes inside."""
     t5 = m5.index.values
     o5, h5, l5, c5 = (m5[x].to_numpy() for x in ("open", "high", "low", "close"))
     hi_pools = np.array([[p[0].astype("datetime64[ns]").astype("int64"), p[2]] for p in D["pools_hi"]], float) if D["pools_hi"] else np.zeros((0, 2))
@@ -165,6 +166,10 @@ def simulate(setups, m5, D, entry="mkt", tp="2", fee=0.0008, buf=0.0005, rmin=0.
         T = D["t15_close"][s["bar"]]
         if T < busy_until:
             continue
+        if window:
+            mi = int(((T.astype("datetime64[m]").astype("int64") + 330) % 1440))
+            if not any((a <= mi < b) if a < b else (mi >= a or mi < b) for a, b in window):
+                continue
         j = np.searchsorted(t5, T)
         if j >= len(t5) - 2:
             continue
@@ -244,6 +249,17 @@ def compound(t, risk=0.01, start=1000.0):
     return round(eq, 0)
 
 
+WINDOWS = {"all": None, "LN": [(750, 1410)], "user": [(1110, 1410), (0, 120)], "noAsia": [(750, 330)]}
+PICKS = ["4H|EqL|w8|mkt|tp3|user", "4H|anyL|w8|mkt|tp3|LN", "4H|anyL|w16|mkt|tp2|all"]
+
+
+def yearly(t):
+    if len(t) == 0:
+        return "no trades"
+    g = t.groupby(t["time"].dt.year)
+    return ", ".join(f"{y}: {len(x)} tr {x.R.sum():+.1f}R" for y, x in g)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--symbols", default="BTCUSDT")
@@ -261,15 +277,17 @@ def main():
         cut_n = cut.tz_localize(None)
         md += [f"## {sym}  ({m5.index[0]:%Y-%m-%d} -> {m5.index[-1]:%Y-%m-%d}, split {cut:%Y-%m-%d})", ""]
         D = build(m5)
-        rows = []
+        rows, picks = [], {}
         for use_bias, eql, win in itertools.product([True, False], [False, True], [8, 16]):
             S = find_setups(D, use_bias=use_bias, eql_only=eql, win=win)
-            for entry, tp in itertools.product(["mkt", "pb50"], ["1.5", "2", "3", "liq"]):
-                t = simulate(S, m5, D, entry=entry, tp=tp, fee=a.fee)
-                name = f"{'4H' if use_bias else 'no4H'}|{'EqL' if eql else 'anyL'}|w{win}|{entry}|tp{tp}"
+            for entry, tp, wn in itertools.product(["mkt", "pb50"], ["1.5", "2", "3", "liq"], WINDOWS):
+                t = simulate(S, m5, D, entry=entry, tp=tp, fee=a.fee, window=WINDOWS[wn])
+                name = f"{'4H' if use_bias else 'no4H'}|{'EqL' if eql else 'anyL'}|w{win}|{entry}|tp{tp}|{wn}"
                 ins = t[t["time"] < cut_n] if len(t) else t
                 oos = t[t["time"] >= cut_n] if len(t) else t
                 si, so = stats(ins), stats(oos)
+                if name in PICKS:
+                    picks[name] = t
                 rows.append(dict(cfg=name, **{f"IS_{k}": v for k, v in si.items()}, **{f"OOS_{k}": v for k, v in so.items()},
                                  OOS_1k_at_1pct_risk=compound(oos) if len(oos) else 1000))
                 if len(t):
@@ -280,7 +298,13 @@ def main():
                 "OOS_totR", "OOS_PF", "OOS_maxDD_R", "OOS_1k_at_1pct_risk"]
         md += ["Top 12 by IN-SAMPLE total R:", "", mdtable(R[cols].head(12)), "",
                "Baseline (exact image rules: 4H bias, any 1H low, w16, market entry, 2R):", "",
-               mdtable(R[R.cfg == "4H|anyL|w16|mkt|tp2"][cols]), "",
+               mdtable(R[R.cfg == "4H|anyL|w16|mkt|tp2|all"][cols]), "",
+               "Pre-chosen candidates (picked on the earlier 1-year run, before this test):", "",
+               mdtable(R[R.cfg.isin(PICKS)][cols]), ""]
+        for k, t in picks.items():
+            md += [f"- {k}: full period {stats(t)} | per year: {yearly(t)} | 1 lakh @2% risk -> {(compound(t, 0.02, 100000) if len(t) else 100000):,.0f}"]
+        md += ["", "Window effect (avg OOS totR over all rule combos): " + ", ".join(
+               f"{w}: {R[R.cfg.str.endswith('|' + w)].OOS_totR.mean():+.1f}R" for w in WINDOWS), "",
                f"Configs profitable OOS: {(R.OOS_totR > 0).sum()} of {len(R)}", ""]
         print(sym, "done", len(m5))
     (out / "summary.md").write_text("\n".join(md))
