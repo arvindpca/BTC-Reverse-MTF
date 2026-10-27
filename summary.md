@@ -1,0 +1,85 @@
+# Time Frame Combo backtest (4H direction -> 1H liquidity -> 15m ChoCH -> 5m entry)
+
+Cost per side 0.08% (fee+slippage). SL = beyond sweep extreme. Same-candle SL/TP = loss. Split: first 2/3 of data = IN-SAMPLE (pick), last 1/3 = OUT-OF-SAMPLE (honest check).
+
+## BTCUSDT  (2023-10-28 -> 2026-10-27, split 2025-10-27)
+
+Top 12 by IN-SAMPLE total R:
+
+| cfg | IS_trades | IS_win | IS_avgR | IS_totR | IS_PF | OOS_trades | OOS_win | OOS_avgR | OOS_totR | OOS_PF | OOS_maxDD_R | OOS_1k_at_1pct_risk |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4H|anyL|w16|mkt|tp3|noAsia | 138 | 44.2 | 0.261 | 36.0 | 1.42 | 75 | 36.0 | 0.055 | 4.1 | 1.08 | 10.6 | 1031.0 |
+| 4H|anyL|w16|mkt|tp3|all | 168 | 41.1 | 0.175 | 29.5 | 1.27 | 93 | 33.3 | -0.038 | -3.5 | 0.95 | 12.7 | 953.0 |
+| 4H|anyL|w16|pb50|tp3|LN | 57 | 47.4 | 0.487 | 27.7 | 1.73 | 20 | 20.0 | -0.581 | -11.6 | 0.48 | 13.2 | 888.0 |
+| no4H|anyL|w8|mkt|tp3|noAsia | 181 | 39.2 | 0.15 | 27.1 | 1.23 | 98 | 39.8 | 0.105 | 10.3 | 1.15 | 11.9 | 1093.0 |
+| 4H|anyL|w16|mkt|tp3|LN | 117 | 41.9 | 0.228 | 26.6 | 1.36 | 65 | 35.4 | 0.022 | 1.5 | 1.03 | 10.6 | 1005.0 |
+| no4H|anyL|w8|mkt|tp3|all | 212 | 38.2 | 0.113 | 23.9 | 1.17 | 119 | 37.0 | 0.003 | 0.3 | 1.0 | 14.5 | 988.0 |
+| 4H|anyL|w8|pb50|tp3|LN | 36 | 50.0 | 0.641 | 23.1 | 2.02 | 13 | 15.4 | -0.777 | -10.1 | 0.35 | 10.1 | 902.0 |
+| 4H|anyL|w8|mkt|tp3|noAsia | 86 | 45.3 | 0.268 | 23.0 | 1.43 | 54 | 44.4 | 0.263 | 14.2 | 1.4 | 8.0 | 1143.0 |
+| no4H|anyL|w16|pb50|tp3|LN | 111 | 38.7 | 0.198 | 22.0 | 1.26 | 44 | 27.3 | -0.316 | -13.9 | 0.67 | 16.0 | 865.0 |
+| no4H|anyL|w16|mkt|tp3|noAsia | 252 | 37.7 | 0.082 | 20.7 | 1.12 | 125 | 35.2 | 0.01 | 1.2 | 1.01 | 13.3 | 996.0 |
+| 4H|anyL|w16|pb50|tp3|noAsia | 66 | 43.9 | 0.312 | 20.6 | 1.43 | 24 | 20.8 | -0.533 | -12.8 | 0.51 | 13.1 | 877.0 |
+| 4H|anyL|w16|pb50|tp2|LN | 57 | 54.4 | 0.357 | 20.3 | 1.62 | 20 | 30.0 | -0.481 | -9.6 | 0.5 | 10.2 | 906.0 |
+
+Baseline (exact image rules: 4H bias, any 1H low, w16, market entry, 2R):
+
+| cfg | IS_trades | IS_win | IS_avgR | IS_totR | IS_PF | OOS_trades | OOS_win | OOS_avgR | OOS_totR | OOS_PF | OOS_maxDD_R | OOS_1k_at_1pct_risk |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4H|anyL|w16|mkt|tp2|all | 173 | 42.2 | -0.008 | -1.4 | 0.99 | 95 | 36.8 | -0.157 | -14.9 | 0.78 | 18.2 | 854.0 |
+
+Pre-chosen candidates (picked on the earlier 1-year run, before this test):
+
+| cfg | IS_trades | IS_win | IS_avgR | IS_totR | IS_PF | OOS_trades | OOS_win | OOS_avgR | OOS_totR | OOS_PF | OOS_maxDD_R | OOS_1k_at_1pct_risk |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4H|anyL|w8|mkt|tp3|LN | 75 | 42.7 | 0.224 | 16.8 | 1.34 | 46 | 45.7 | 0.298 | 13.7 | 1.46 | 6.8 | 1138.0 |
+| 4H|EqL|w8|mkt|tp3|user | 8 | 50.0 | 0.219 | 1.8 | 1.38 | 5 | 100.0 | 2.332 | 11.7 | 99.0 | 0.0 | 1122.0 |
+| 4H|anyL|w16|mkt|tp2|all | 173 | 42.2 | -0.008 | -1.4 | 0.99 | 95 | 36.8 | -0.157 | -14.9 | 0.78 | 18.2 | 854.0 |
+
+- 4H|anyL|w8|mkt|tp3|LN: full period {'trades': 121, 'win': np.float64(43.8), 'avgR': np.float64(0.252), 'totR': np.float64(30.5), 'PF': np.float64(1.39), 'maxDD_R': np.float64(12.4), 'sum_pct': np.float64(35.6)} | per year: 2023: 4 tr -4.4R, 2024: 41 tr +15.8R, 2025: 35 tr +10.5R, 2026: 41 tr +8.7R | 1 lakh @2% risk -> 170,923
+- 4H|anyL|w16|mkt|tp2|all: full period {'trades': 268, 'win': np.float64(40.3), 'avgR': np.float64(-0.061), 'totR': np.float64(-16.3), 'PF': np.float64(0.91), 'maxDD_R': np.float64(22.5), 'sum_pct': np.float64(-14.4)} | per year: 2023: 16 tr -9.2R, 2024: 84 tr +6.6R, 2025: 88 tr -0.2R, 2026: 80 tr -13.6R | 1 lakh @2% risk -> 65,509
+- 4H|EqL|w8|mkt|tp3|user: full period {'trades': 13, 'win': np.float64(69.2), 'avgR': np.float64(1.032), 'totR': np.float64(13.4), 'PF': np.float64(3.92), 'maxDD_R': np.float64(2.4), 'sum_pct': np.float64(18.2)} | per year: 2023: 1 tr -1.1R, 2024: 4 tr -0.6R, 2025: 3 tr +3.4R, 2026: 5 tr +11.7R | 1 lakh @2% risk -> 129,495
+
+Window effect (avg OOS totR over all rule combos): all: -5.5R, LN: -0.1R, user: -0.8R, noAsia: -2.0R
+
+Configs profitable OOS: 114 of 256
+
+## PAXGUSDT  (2023-10-28 -> 2026-10-27, split 2025-10-27)
+
+Top 12 by IN-SAMPLE total R:
+
+| cfg | IS_trades | IS_win | IS_avgR | IS_totR | IS_PF | OOS_trades | OOS_win | OOS_avgR | OOS_totR | OOS_PF | OOS_maxDD_R | OOS_1k_at_1pct_risk |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4H|EqL|w16|pb50|tp3|all | 19 | 42.1 | 0.021 | 0.4 | 1.02 | 6 | 50.0 | 0.607 | 3.6 | 1.83 | 3.2 | 1036.0 |
+| 4H|EqL|w16|pb50|tp3|LN | 13 | 38.5 | -0.117 | -1.5 | 0.87 | 1 | 0.0 | -1.234 | -1.2 | 0.0 | 1.2 | 988.0 |
+| 4H|EqL|w16|pb50|tp3|noAsia | 16 | 37.5 | -0.113 | -1.8 | 0.88 | 4 | 50.0 | 0.607 | 2.4 | 1.8 | 1.8 | 1024.0 |
+| 4H|EqL|w16|pb50|tp2|all | 19 | 47.4 | -0.109 | -2.1 | 0.86 | 6 | 50.0 | 0.107 | 0.6 | 1.15 | 3.2 | 1006.0 |
+| 4H|EqL|w16|pb50|tp1.5|all | 19 | 52.6 | -0.141 | -2.7 | 0.8 | 6 | 50.0 | -0.143 | -0.9 | 0.8 | 3.2 | 991.0 |
+| 4H|EqL|w16|pb50|tp1.5|LN | 13 | 46.2 | -0.316 | -4.1 | 0.6 | 1 | 0.0 | -1.234 | -1.2 | 0.0 | 1.2 | 988.0 |
+| 4H|EqL|w16|mkt|tp3|noAsia | 37 | 40.5 | -0.119 | -4.4 | 0.83 | 18 | 38.9 | -0.071 | -1.3 | 0.91 | 6.7 | 985.0 |
+| 4H|EqL|w8|pb50|tp3|all | 10 | 30.0 | -0.438 | -4.4 | 0.59 | 6 | 50.0 | 0.607 | 3.6 | 1.83 | 3.2 | 1036.0 |
+| 4H|EqL|w8|pb50|tp1.5|all | 10 | 40.0 | -0.485 | -4.9 | 0.46 | 6 | 50.0 | -0.143 | -0.9 | 0.8 | 3.2 | 991.0 |
+| 4H|EqL|w16|mkt|tp3|user | 20 | 30.0 | -0.255 | -5.1 | 0.67 | 6 | 83.3 | 1.09 | 6.5 | 6.74 | 1.1 | 1067.0 |
+| 4H|EqL|w16|pb50|tpliq|LN | 12 | 41.7 | -0.449 | -5.4 | 0.47 | 1 | 0.0 | -1.234 | -1.2 | 0.0 | 1.2 | 988.0 |
+| 4H|EqL|w16|pb50|tpliq|all | 18 | 44.4 | -0.301 | -5.4 | 0.6 | 6 | 50.0 | -0.103 | -0.6 | 0.86 | 3.2 | 993.0 |
+
+Baseline (exact image rules: 4H bias, any 1H low, w16, market entry, 2R):
+
+| cfg | IS_trades | IS_win | IS_avgR | IS_totR | IS_PF | OOS_trades | OOS_win | OOS_avgR | OOS_totR | OOS_PF | OOS_maxDD_R | OOS_1k_at_1pct_risk |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4H|anyL|w16|mkt|tp2|all | 154 | 31.8 | -0.48 | -74.0 | 0.44 | 89 | 36.0 | -0.277 | -24.6 | 0.64 | 25.4 | 775.0 |
+
+Pre-chosen candidates (picked on the earlier 1-year run, before this test):
+
+| cfg | IS_trades | IS_win | IS_avgR | IS_totR | IS_PF | OOS_trades | OOS_win | OOS_avgR | OOS_totR | OOS_PF | OOS_maxDD_R | OOS_1k_at_1pct_risk |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4H|EqL|w8|mkt|tp3|user | 12 | 8.3 | -0.946 | -11.4 | 0.04 | 3 | 66.7 | 0.636 | 1.9 | 2.13 | 1.7 | 1019.0 |
+| 4H|anyL|w8|mkt|tp3|LN | 61 | 29.5 | -0.445 | -27.2 | 0.47 | 27 | 29.6 | -0.364 | -9.8 | 0.57 | 10.8 | 904.0 |
+| 4H|anyL|w16|mkt|tp2|all | 154 | 31.8 | -0.48 | -74.0 | 0.44 | 89 | 36.0 | -0.277 | -24.6 | 0.64 | 25.4 | 775.0 |
+
+- 4H|anyL|w8|mkt|tp3|LN: full period {'trades': 88, 'win': np.float64(29.5), 'avgR': np.float64(-0.42), 'totR': np.float64(-37.0), 'PF': np.float64(0.5), 'maxDD_R': np.float64(37.0), 'sum_pct': np.float64(-15.7)} | per year: 2023: 3 tr -3.9R, 2024: 29 tr -17.3R, 2025: 34 tr -8.3R, 2026: 22 tr -7.5R | 1 lakh @2% risk -> 46,011
+- 4H|anyL|w16|mkt|tp2|all: full period {'trades': 243, 'win': np.float64(33.3), 'avgR': np.float64(-0.406), 'totR': np.float64(-98.6), 'PF': np.float64(0.51), 'maxDD_R': np.float64(101.2), 'sum_pct': np.float64(-52.5)} | per year: 2023: 9 tr -6.0R, 2024: 68 tr -35.3R, 2025: 92 tr -42.0R, 2026: 74 tr -15.4R | 1 lakh @2% risk -> 12,792
+- 4H|EqL|w8|mkt|tp3|user: full period {'trades': 15, 'win': np.float64(20.0), 'avgR': np.float64(-0.63), 'totR': np.float64(-9.4), 'PF': np.float64(0.3), 'maxDD_R': np.float64(13.0), 'sum_pct': np.float64(-1.1)} | per year: 2023: 1 tr -1.4R, 2024: 6 tr -5.1R, 2025: 5 tr -4.9R, 2026: 3 tr +1.9R | 1 lakh @2% risk -> 82,330
+
+Window effect (avg OOS totR over all rule combos): all: -15.7R, LN: -8.0R, user: -4.1R, noAsia: -11.4R
+
+Configs profitable OOS: 42 of 256
