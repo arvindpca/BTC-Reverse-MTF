@@ -181,7 +181,10 @@ def simulate(setups, m5, D, entry="mkt", tp="2", fee=0.0008, buf=0.0005, rmin=0.
         if entry == "mkt":
             ej, ep = j, o5[j]
         else:
-            lvl = s["leg"] - 0.5 * (s["leg"] - s["sweep"])
+            if entry.startswith("pbR"):   # limit k x (market price -> SL distance) closer to the SL
+                lvl = o5[j] - float(entry[3:]) * (o5[j] - sl)
+            else:
+                lvl = s["leg"] - 0.5 * (s["leg"] - s["sweep"])
             ej = None
             for q in range(j, min(j + pb_valid, len(t5))):
                 if (d == 1 and l5[q] <= sl) or (d == -1 and h5[q] >= sl):
@@ -204,7 +207,10 @@ def simulate(setups, m5, D, entry="mkt", tp="2", fee=0.0008, buf=0.0005, rmin=0.
                 if len(cand) == 0: continue
                 tgt = cand.max()
         else:
-            tgt = ep + d * float(tp) * risk
+            if str(tp).startswith("m"):   # same target PRICE as a market entry would have used
+                tgt = o5[j] + float(tp[1:]) * (o5[j] - sl)
+            else:
+                tgt = ep + d * float(tp) * risk
         res, xj, xp = None, None, None
         sl0, moved, mfe = sl, False, 0.0
         for q in range(ej, min(ej + max_hold, len(t5))):
