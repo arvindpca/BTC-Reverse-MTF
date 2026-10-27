@@ -47,6 +47,23 @@ def adx(h, l, c, n=14):
     return pd.Series(dx).ewm(alpha=1 / n, adjust=False).mean().to_numpy()
 
 
+def supertrend(h, l, c, n=10, m=3.0):
+    a = atr(h, l, c, n); mid = (h + l) / 2
+    ub, lb = mid + m * a, mid - m * a
+    d = np.ones(len(c)); fu, fl = ub.copy(), lb.copy()
+    for i in range(1, len(c)):
+        fu[i] = ub[i] if (ub[i] < fu[i - 1] or c[i - 1] > fu[i - 1]) else fu[i - 1]
+        fl[i] = lb[i] if (lb[i] > fl[i - 1] or c[i - 1] < fl[i - 1]) else fl[i - 1]
+        d[i] = 1 if c[i] > fu[i - 1] else (-1 if c[i] < fl[i - 1] else d[i - 1])
+    return d
+
+
+def htf_map(D, df, hours, cols):
+    tc = (df.index + pd.Timedelta(hours=hours)).values
+    k = np.searchsorted(tc, D["t15_close"], side="right") - 1
+    return {n: np.where(k >= 0, v[np.clip(k, 0, None)], np.nan) for n, v in cols.items()}
+
+
 def features(m5, D):
     m15 = D["m15"]
     o, h, l, c, v = (m15[x].to_numpy() for x in ("open", "high", "low", "close", "volume"))
@@ -74,6 +91,17 @@ def features(m5, D):
     k = np.searchsorted(t1c, D["t15_close"], side="right") - 1
     for col in f1.columns:
         F[col] = np.where(k >= 0, f1[col].to_numpy()[np.clip(k, 0, None)], np.nan)
+    F["st_1h"] = htf_map(D, h1, 1, {"x": supertrend(H, L, C)})["x"]
+    h4 = resample(m5, "4h")
+    H4, L4, C4 = (h4[x].to_numpy() for x in ("high", "low", "close"))
+    for n, v in htf_map(D, h4, 4, {"st_4h": supertrend(H4, L4, C4), "ema50_4h": ema(C4, 50), "ema200_4h": ema(C4, 200)}).items():
+        F[n] = v
+    d1 = resample(m5, "1D")
+    Hd, Ld, Cd = (d1[x].to_numpy() for x in ("high", "low", "close"))
+    from .tfcombo import htf_bias
+    for n, v in htf_map(D, d1, 24, {"ema20_d": ema(Cd, 20), "ema50_d": ema(Cd, 50), "ema200_d": ema(Cd, 200),
+                                     "st_d": supertrend(Hd, Ld, Cd), "bias_d": htf_bias(d1, 2)}).items():
+        F[n] = v
     return F
 
 
@@ -94,7 +122,20 @@ def filt(name, F, s):
     if name == "strong_candle": return r.body_atr >= 1.0
     if name == "atr_high": return r.atrp_rank >= 0.5
     if name == "atr_low": return r.atrp_rank < 0.5
+    if name == "supertrend_1h": return r.st_1h == d
+    if name == "supertrend_4h": return r.st_4h == d
+    if name == "supertrend_D": return r.st_d == d
+    if name == "ema50_4h": return (r.close - r.ema50_4h) * d > 0
+    if name == "ema200_4h": return (r.close - r.ema200_4h) * d > 0
+    if name == "ema20_D": return (r.close - r.ema20_d) * d > 0
+    if name == "ema50_D": return (r.close - r.ema50_d) * d > 0
+    if name == "ema200_D": return (r.close - r.ema200_d) * d > 0
+    if name == "daily_structure": return r.bias_d == d
     raise ValueError(name)
+
+
+TREND = ["supertrend_1h", "supertrend_4h", "supertrend_D", "ema50_4h", "ema200_4h", "ema20_D", "ema50_D",
+         "ema200_D", "daily_structure", "ema200_1h", "ema50>200_1h"]
 
 
 FILTERS = ["none", "rsi>50", "rsi_not_extreme", "macd_hist", "ema50_15m", "vwap", "ema200_1h", "ema50>200_1h",
@@ -144,13 +185,26 @@ def main():
                           lakh_3y_2pct=compound(t, 0.02, 100000) if len(t) else 100000,
                           lakh_1y_2pct=compound(t[t.time >= cut], 0.02, 100000) if len(t) else 100000))
     C = pd.DataFrame(combo).sort_values("TR_avgR", ascending=False) if combo else pd.DataFrame()
+    trows = []
+    for base in (["none"], ["volume1.5x"]):
+        for n in ["none"] + TREND:
+            names = [x for x in base + [n] if x != "none"]
+            t, s1, s2 = run(names)
+            trows.append(dict(filter=" + ".join(names) or "none", TR_trades=s1["trades"], TR_win=s1["win"],
+                              TR_avgR=s1["avgR"], TR_totR=s1["totR"], TE_trades=s2["trades"], TE_win=s2["win"],
+                              TE_avgR=s2["avgR"], TE_totR=s2["totR"], TE_maxDD_R=s2["maxDD_R"],
+                              lakh_3y_2pct=compound(t, 0.02, 100000) if len(t) else 100000,
+                              lakh_1y_2pct=compound(t[t.time >= cut], 0.02, 100000) if len(t) else 100000))
+    T = pd.DataFrame(trows)
+    T.to_csv(out / "trend.csv", index=False)
     R.to_csv(out / "single.csv", index=False)
     if len(C): C.to_csv(out / "pairs.csv", index=False)
     md = [f"# Indicator filters on final setup ({a.symbol}, 4H|anyL|w8|mkt|tp3, IST 12:30-23:30)", "",
           f"TRAIN < {cut:%Y-%m-%d} <= TEST (last 365 days). Filters chosen on TRAIN only (avgR better than none, >=30 trades).", "",
           "## Single filters", "", mdtable(R), "",
           f"Filters that helped on TRAIN: {', '.join(good) or 'none'}", "",
-          "## Pairs of TRAIN-helpful filters (sorted by TRAIN avgR)", "", mdtable(C.head(15)) if len(C) else "none", ""]
+          "## Pairs of TRAIN-helpful filters (sorted by TRAIN avgR)", "", mdtable(C.head(15)) if len(C) else "none", "",
+          "## Trend filters (alone, and on top of volume1.5x)", "", mdtable(T), ""]
     (out / "summary.md").write_text("\n".join(md))
     print("\n".join(md))
 
