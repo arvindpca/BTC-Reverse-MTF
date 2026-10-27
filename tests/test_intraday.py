@@ -275,3 +275,53 @@ def test_fetch_stops_cleanly_at_listing_date():
     raw, meta = fetch_candles("B-PAXG_USDT", "5m", 5, session=ErrorAfterSession(now - 2 * 86400, cap=300),
                               now_s=now, pause=0)
     assert len(raw) >= 2 * 288 - 300 and raw.index[0] > pd.Timestamp(now - 3 * 86400, unit="s", tz="UTC")
+
+
+# ------------------------------------------------------------------ BTC 1h paper trader
+def _paper_frame(rows, start="2026-01-31 20:00"):
+    f = _frame(rows, minutes=60, start=start)
+    f["atr"] = 1.0
+    return f
+
+
+def test_paper_entry_sl_tp_and_month_deposit():
+    from intraday.paper_btc1h import new_state, step
+    rows = [[100, 100.2, 99.9, 100]] * 3 + [[100, 101, 99.9, 100.5], [100.5, 105.5, 100.4, 105]] + [[105, 105, 105, 105]] * 3
+    f = _paper_frame(rows)
+    mask = np.zeros(len(f), bool)
+    mask[2] = True                                  # signal on candle 2 -> entry at open of candle 3 = 100
+    st = new_state(f.index[0], f.index[0].strftime("%Y-%m"))
+    st, msgs = step(st, f, mask)
+    assert len(st["trades"]) == 1
+    t = st["trades"][0]
+    assert t["entry"] == 100 and t["reason"] == "TP" and t["exit"] == 104.5      # 1.5 ATR stop, 3R target
+    assert st["deposited"] == 4000 and st["month"] == "2026-02"                    # +1000 at the new month
+    assert any("SIGNAL" in m for m in msgs) and any("EXIT" in m for m in msgs)
+    st2, msgs2 = step(st, f, mask)                                                  # idempotent
+    assert msgs2 == [] and len(st2["trades"]) == 1
+
+
+def test_paper_stop_first_and_sizing():
+    from intraday.paper_btc1h import new_state, step
+    rows = [[100, 100.1, 99.9, 100]] * 3 + [[100, 106, 97, 100]] + [[100, 100, 100, 100]] * 2
+    f = _paper_frame(rows, start="2026-03-01 00:00")
+    mask = np.zeros(len(f), bool)
+    mask[2] = True
+    st = new_state(f.index[0], "2026-03")
+    st, _ = step(st, f, mask)
+    t = st["trades"][0]
+    assert t["reason"] == "SL" and t["exit"] == 98.5
+    assert np.isclose(t["position"], 3000 * 0.02 / 0.015)                         # 2% risk / 1.5% stop
+    assert t["pnl"] < -60 and st["equity"] < 3000
+
+
+def test_paper_time_exit_after_48_candles():
+    from intraday.paper_btc1h import new_state, step
+    rows = [[100, 100.1, 99.9, 100]] * 3 + [[100, 100.5, 99.5, 100.2]] * 60
+    f = _paper_frame(rows, start="2026-03-01 00:00")
+    mask = np.zeros(len(f), bool)
+    mask[2] = True
+    st = new_state(f.index[0], "2026-03")
+    st, _ = step(st, f, mask)
+    t = st["trades"][0]
+    assert t["reason"].startswith("TIME") and pd.Timestamp(t["exit_time"]) == f.index[3 + 47] + pd.Timedelta(hours=1)

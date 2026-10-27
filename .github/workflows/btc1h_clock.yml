@@ -1,0 +1,27 @@
+name: Clock (btc1h_paper.yml auto-run)
+
+# GitHub cron is often hours late. This long job dispatches btc1h_paper.yml at :03 and :25 every hour,
+# runs 340 minutes, then starts the next clock. The cron below only restarts it if the chain breaks.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "47 */3 * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: btc1h-clock
+  cancel-in-progress: false
+
+jobs:
+  clock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run clock
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m intraday.clock_btc1h 340
