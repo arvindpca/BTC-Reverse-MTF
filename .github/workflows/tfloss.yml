@@ -1,0 +1,55 @@
+name: Time Frame Combo loss-reduction tests (BTC)
+
+# Manual only. Fetches public 5m candles, backtests 4H direction -> 1H liquidity sweep -> 15m ChoCH -> 5m entry,
+# and publishes the report to the 'tfloss-results' branch. No orders, no secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      assets:
+        description: "Binance symbols, space separated"
+        default: "BTCUSDT"
+      days:
+        description: "5m history in days"
+        default: "1095"
+
+permissions:
+  contents: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ASSETS: ${{ inputs.assets }}
+      DAYS: ${{ inputs.days }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run backtest
+        run: |
+          case "$DAYS" in ''|*[!0-9]*) echo "numbers only"; exit 1;; esac
+          if ! [[ "$ASSETS" =~ ^[A-Z0-9\ ]+$ ]]; then echo "bad assets"; exit 1; fi
+          mkdir -p tfloss_out
+          set -o pipefail
+          python -m app.tfcombo_loss --symbol "$ASSETS" --days "$DAYS" --out tfloss_out 2>&1 | tee tfloss_out/log.txt
+          cat tfloss_out/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish report to the tfloss-results branch
+        if: always()
+        run: |
+          rm -rf /tmp/pub && mkdir /tmp/pub && cp -r tfloss_out/. /tmp/pub/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan tfloss-results
+          git rm -rfq .
+          git clean -fdxq
+          cp -r /tmp/pub/. .
+          git add -A
+          git commit -qm "Loss test results (run $GITHUB_RUN_ID)"
+          git push -f origin tfloss-results

@@ -154,7 +154,7 @@ def find_setups(D, use_bias=True, eql_only=False, win=16, tol=0.0010, max_age_da
 
 
 def simulate(setups, m5, D, entry="mkt", tp="2", fee=0.0008, buf=0.0005, rmin=0.002, rmax=0.03,
-             pb_valid=24, max_hold=576, window=None):
+             pb_valid=24, max_hold=576, window=None, be=None, skip_dow=None):
     """window: list of (start_min, end_min) in IST (UTC+5:30); a setup is taken only if its 15m signal closes inside."""
     t5 = m5.index.values
     o5, h5, l5, c5 = (m5[x].to_numpy() for x in ("open", "high", "low", "close"))
@@ -166,6 +166,9 @@ def simulate(setups, m5, D, entry="mkt", tp="2", fee=0.0008, buf=0.0005, rmin=0.
         T = D["t15_close"][s["bar"]]
         if T < busy_until:
             continue
+        if skip_dow is not None:
+            if pd.Timestamp(T + np.timedelta64(330, "m")).dayofweek in skip_dow:
+                continue
         if window:
             mi = int(((T.astype("datetime64[m]").astype("int64") + 330) % 1440))
             if not any((a <= mi < b) if a < b else (mi >= a or mi < b) for a, b in window):
@@ -203,23 +206,28 @@ def simulate(setups, m5, D, entry="mkt", tp="2", fee=0.0008, buf=0.0005, rmin=0.
         else:
             tgt = ep + d * float(tp) * risk
         res, xj, xp = None, None, None
+        sl0, moved, mfe = sl, False, 0.0
         for q in range(ej, min(ej + max_hold, len(t5))):
             hit_sl = (l5[q] <= sl) if d == 1 else (h5[q] >= sl)
             hit_tp = (h5[q] >= tgt) if d == 1 else (l5[q] <= tgt)
             if q == ej and entry != "mkt":
                 hit_tp = hit_tp and ((c5[q] >= tgt) if d == 1 else (c5[q] <= tgt))  # same-bar fill: be strict
             if hit_sl:
-                res, xj, xp = "SL", q, sl; break
+                res, xj, xp = ("BE" if moved else "SL"), q, sl; break
             if hit_tp:
                 res, xj, xp = "TP", q, tgt; break
+            fav = ((h5[q] - ep) if d == 1 else (ep - l5[q])) / risk
+            mfe = max(mfe, fav)
+            if be is not None and not moved and fav >= be:   # applies from the NEXT candle
+                sl, moved = ep * (1 + d * 2 * fee), True
         if res is None:
             xj = min(ej + max_hold, len(t5)) - 1
             res, xp = "TIME", c5[xj]
         gross = (xp - ep) * d / ep
         net = gross - 2 * fee
-        trades.append(dict(time=pd.Timestamp(t5[ej]), dir="LONG" if d == 1 else "SHORT", entry=ep, sl=sl, tp=tgt,
+        trades.append(dict(time=pd.Timestamp(t5[ej]), dir="LONG" if d == 1 else "SHORT", entry=ep, sl=sl0, tp=tgt,
                            exit=xp, exit_time=pd.Timestamp(t5[xj]), result=res, risk_pct=risk / ep * 100,
-                           R=net * ep / risk, net_pct=net * 100))
+                           R=net * ep / risk, net_pct=net * 100, mfe_R=round(mfe, 2)))
         busy_until = t5[xj] + np.timedelta64(5, "m")
     return pd.DataFrame(trades)
 
