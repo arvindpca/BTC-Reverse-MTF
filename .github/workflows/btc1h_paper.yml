@@ -4,6 +4,9 @@ name: BTC 1h paper trading (log only)
 # Started by btc1h_clock.yml every hour (cron below is only a backup). State + report live on 'btc1h-paper-state'.
 # Separate from the PAXG paper job (paper.yml), which is not touched.
 on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/btc1h_paper.yml", "intraday/paper_btc1h.py"]
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
