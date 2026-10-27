@@ -1,0 +1,72 @@
+/home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/app/tfcombo_ind.py:154: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  cut = (m5.index[-1] - pd.Timedelta(days=365)).tz_localize(None)
+/home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/app/tfcombo_ind.py:90: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  t1c = (h1.index + pd.Timedelta(hours=1)).values
+/home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/app/tfcombo_ind.py:62: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  tc = (df.index + pd.Timedelta(hours=hours)).values
+/home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/app/tfcombo_ind.py:62: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  tc = (df.index + pd.Timedelta(hours=hours)).values
+/home/runner/work/BTC-Reverse-MTF/BTC-Reverse-MTF/app/tfcombo_ind.py:62: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+  tc = (df.index + pd.Timedelta(hours=hours)).values
+# Indicator filters on final setup (BTCUSDT, 4H|anyL|w8|mkt|tp3, IST 12:30-23:30)
+
+TRAIN < 2025-10-27 <= TEST (last 365 days). Filters chosen on TRAIN only (avgR better than none, >=30 trades).
+
+## Single filters
+
+| filter | TR_trades | TR_win | TR_avgR | TR_totR | TE_trades | TE_win | TE_avgR | TE_totR | TE_maxDD_R | lakh_3y_2pct | lakh_1y_2pct |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| none | 75 | 42.7 | 0.224 | 16.8 | 46 | 45.7 | 0.298 | 13.7 | 6.8 | 170923.0 | 127675.0 |
+| rsi>50 | 73 | 42.5 | 0.208 | 15.2 | 43 | 48.8 | 0.401 | 17.2 | 5.7 | 178065.0 | 137150.0 |
+| rsi_not_extreme | 75 | 42.7 | 0.224 | 16.8 | 44 | 43.2 | 0.237 | 10.4 | 8.5 | 160393.0 | 119810.0 |
+| macd_hist | 70 | 41.4 | 0.156 | 10.9 | 38 | 47.4 | 0.345 | 13.1 | 5.3 | 151616.0 | 126823.0 |
+| ema50_15m | 60 | 38.3 | 0.047 | 2.8 | 37 | 48.6 | 0.347 | 12.9 | 5.9 | 129532.0 | 126326.0 |
+| vwap | 60 | 40.0 | 0.102 | 6.1 | 37 | 48.6 | 0.331 | 12.3 | 5.5 | 136618.0 | 124837.0 |
+| ema200_1h | 58 | 37.9 | 0.149 | 8.6 | 34 | 41.2 | 0.214 | 7.3 | 5.9 | 129847.0 | 113105.0 |
+| ema50>200_1h | 58 | 39.7 | 0.197 | 11.4 | 33 | 42.4 | 0.221 | 7.3 | 7.1 | 137209.0 | 113228.0 |
+| adx>20 | 43 | 44.2 | 0.334 | 14.4 | 27 | 48.1 | 0.265 | 7.2 | 9.0 | 147277.0 | 113626.0 |
+| adx>25 | 29 | 37.9 | 0.248 | 7.2 | 14 | 42.9 | 0.239 | 3.3 | 6.9 | 119981.0 | 105986.0 |
+| volume1.5x | 40 | 47.5 | 0.311 | 12.5 | 27 | 59.3 | 0.832 | 22.5 | 3.5 | 192684.0 | 153541.0 |
+| strong_candle | 42 | 47.6 | 0.295 | 12.4 | 30 | 53.3 | 0.617 | 18.5 | 6.9 | 177141.0 | 141720.0 |
+| atr_high | 26 | 61.5 | 0.899 | 23.4 | 16 | 31.2 | -0.26 | -4.2 | 9.3 | 143071.0 | 91453.0 |
+| atr_low | 49 | 32.7 | -0.134 | -6.6 | 30 | 53.3 | 0.595 | 17.9 | 3.3 | 119467.0 | 139607.0 |
+
+Filters that helped on TRAIN: adx>20, volume1.5x, strong_candle
+
+## Pairs of TRAIN-helpful filters (sorted by TRAIN avgR)
+
+| filter | TR_trades | TR_win | TR_avgR | TR_totR | TE_trades | TE_win | TE_avgR | TE_totR | TE_maxDD_R | lakh_3y_2pct | lakh_1y_2pct |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| volume1.5x + strong_candle | 32 | 53.1 | 0.395 | 12.6 | 23 | 56.5 | 0.767 | 17.6 | 3.5 | 176938.0 | 139857.0 |
+| adx>20 + strong_candle | 27 | 40.7 | 0.229 | 6.2 | 19 | 52.6 | 0.381 | 7.2 | 6.9 | 127291.0 | 114347.0 |
+| adx>20 + volume1.5x | 22 | 40.9 | 0.198 | 4.3 | 16 | 68.8 | 0.946 | 15.1 | 2.9 | 144191.0 | 133841.0 |
+
+## Trend filters (alone, and on top of volume1.5x)
+
+| filter | TR_trades | TR_win | TR_avgR | TR_totR | TE_trades | TE_win | TE_avgR | TE_totR | TE_maxDD_R | lakh_3y_2pct | lakh_1y_2pct |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| none | 75 | 42.7 | 0.224 | 16.8 | 46 | 45.7 | 0.298 | 13.7 | 6.8 | 170923.0 | 127675.0 |
+| supertrend_1h | 40 | 37.5 | 0.108 | 4.3 | 26 | 61.5 | 0.825 | 21.5 | 3.4 | 160273.0 | 150617.0 |
+| supertrend_4h | 64 | 39.1 | 0.198 | 12.7 | 33 | 33.3 | -0.08 | -2.6 | 8.7 | 115226.0 | 93113.0 |
+| supertrend_D | 35 | 37.1 | 0.211 | 7.4 | 24 | 45.8 | 0.431 | 10.3 | 5.7 | 136863.0 | 120815.0 |
+| ema50_4h | 58 | 37.9 | 0.149 | 8.6 | 34 | 41.2 | 0.147 | 5.0 | 6.9 | 124268.0 | 108246.0 |
+| ema200_4h | 56 | 41.1 | 0.203 | 11.4 | 29 | 48.3 | 0.466 | 13.5 | 4.6 | 155739.0 | 128326.0 |
+| ema20_D | 57 | 40.4 | 0.196 | 11.2 | 30 | 40.0 | 0.103 | 3.1 | 5.7 | 126250.0 | 104505.0 |
+| ema50_D | 47 | 38.3 | 0.106 | 5.0 | 28 | 46.4 | 0.318 | 8.9 | 5.7 | 126182.0 | 117377.0 |
+| ema200_D | 39 | 38.5 | 0.082 | 3.2 | 22 | 45.5 | 0.424 | 9.3 | 4.3 | 123707.0 | 118613.0 |
+| daily_structure | 45 | 35.6 | 0.037 | 1.7 | 26 | 42.3 | 0.236 | 6.1 | 4.9 | 112061.0 | 111131.0 |
+| ema200_1h | 58 | 37.9 | 0.149 | 8.6 | 34 | 41.2 | 0.214 | 7.3 | 5.9 | 129847.0 | 113105.0 |
+| ema50>200_1h | 58 | 39.7 | 0.197 | 11.4 | 33 | 42.4 | 0.221 | 7.3 | 7.1 | 137209.0 | 113228.0 |
+| volume1.5x | 40 | 47.5 | 0.311 | 12.5 | 27 | 59.3 | 0.832 | 22.5 | 3.5 | 192684.0 | 153541.0 |
+| volume1.5x + supertrend_1h | 22 | 50.0 | 0.47 | 10.3 | 16 | 68.8 | 1.04 | 16.6 | 2.3 | 166968.0 | 137731.0 |
+| volume1.5x + supertrend_4h | 32 | 40.6 | 0.277 | 8.9 | 19 | 52.6 | 0.58 | 11.0 | 3.1 | 143975.0 | 123010.0 |
+| volume1.5x + supertrend_D | 18 | 44.4 | 0.437 | 7.9 | 16 | 56.2 | 0.81 | 13.0 | 3.1 | 147954.0 | 127923.0 |
+| volume1.5x + ema50_4h | 28 | 42.9 | 0.324 | 9.1 | 19 | 52.6 | 0.583 | 11.1 | 3.1 | 145160.0 | 123141.0 |
+| volume1.5x + ema200_4h | 29 | 41.4 | 0.139 | 4.0 | 18 | 61.1 | 0.888 | 16.0 | 2.3 | 144797.0 | 135694.0 |
+| volume1.5x + ema20_D | 28 | 42.9 | 0.231 | 6.5 | 19 | 52.6 | 0.498 | 9.5 | 2.3 | 133730.0 | 119366.0 |
+| volume1.5x + ema50_D | 23 | 43.5 | 0.242 | 5.6 | 17 | 58.8 | 0.778 | 13.2 | 3.1 | 141918.0 | 128614.0 |
+| volume1.5x + ema200_D | 18 | 38.9 | 0.051 | 0.9 | 13 | 53.8 | 0.829 | 10.8 | 3.1 | 123768.0 | 122690.0 |
+| volume1.5x + daily_structure | 23 | 39.1 | 0.208 | 4.8 | 16 | 56.2 | 0.711 | 11.4 | 2.3 | 134767.0 | 124126.0 |
+| volume1.5x + ema200_1h | 28 | 42.9 | 0.324 | 9.1 | 20 | 55.0 | 0.695 | 13.9 | 2.3 | 153359.0 | 130095.0 |
+| volume1.5x + ema50>200_1h | 27 | 40.7 | 0.197 | 5.3 | 21 | 57.1 | 0.719 | 15.1 | 2.3 | 145864.0 | 133195.0 |
+

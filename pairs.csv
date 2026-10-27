@@ -1,0 +1,4 @@
+filter,TR_trades,TR_win,TR_avgR,TR_totR,TE_trades,TE_win,TE_avgR,TE_totR,TE_maxDD_R,lakh_3y_2pct,lakh_1y_2pct
+volume1.5x + strong_candle,32,53.1,0.395,12.6,23,56.5,0.767,17.6,3.5,176938.0,139857.0
+adx>20 + strong_candle,27,40.7,0.229,6.2,19,52.6,0.381,7.2,6.9,127291.0,114347.0
+adx>20 + volume1.5x,22,40.9,0.198,4.3,16,68.8,0.946,15.1,2.9,144191.0,133841.0
