@@ -296,7 +296,7 @@ def test_paper_entry_sl_tp_and_month_deposit():
     t = st["trades"][0]
     assert t["entry"] == 100 and t["reason"] == "TP" and t["exit"] == 104.5      # 1.5 ATR stop, 3R target
     assert st["deposited"] == 4000 and st["month"] == "2026-02"                    # +1000 at the new month
-    assert any("SIGNAL" in m for m in msgs) and any("EXIT" in m for m in msgs)
+    assert any("SIGNAL" in m for m in msgs) and any("EXIT" in m for m in msgs) and all("BTC 1H STRATEGY" in m for m in msgs)
     st2, msgs2 = step(st, f, mask)                                                  # idempotent
     assert msgs2 == [] and len(st2["trades"]) == 1
 

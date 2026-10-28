@@ -58,14 +58,34 @@ def _funding_n(t_in: pd.Timestamp, t_out: pd.Timestamp) -> int:
     return int(t_out.value // EIGHT_H.value - t_in.value // EIGHT_H.value)
 
 
+HEAD = "🟦 BTC 1H STRATEGY — PAPER TRADE\n(sirf practice, koi asli order nahi)"
+LINE = "━━━━━━━━━━━━━━━"
+
+
+def n(x: float, d: int = 0) -> str:
+    return f"{x:,.{d}f}"
+
+
+def msg(title: str, *blocks: list[str]) -> str:
+    parts = [HEAD, LINE, title]
+    for b in blocks:
+        parts += [LINE] + list(b)
+    return "\n".join(parts)
+
+
+def _money(st: dict) -> list[str]:
+    gain = st["equity"] - st["deposited"]
+    return [f"💼 Account: {n(st['equity'])}", f"Kul daala: {n(st['deposited'])}",
+            f"Fayda/Nuksaan: {'+' if gain >= 0 else ''}{n(gain)}"]
+
+
 def _month_report(st: dict, month: str) -> str:
     tr = [t for t in st["trades"] if t["exit_time"][:7] == month]
     pnl = sum(t["pnl"] for t in tr)
     wins = sum(t["pnl"] > 0 for t in tr)
-    return (f"BTC 1h PAPER - {month} ka hisaab\n"
-            f"trades {len(tr)}, jeet {wins}, mahine ka P/L {pnl:+.0f}\n"
-            f"account {st['equity']:.0f}, ab tak kul daala {st['deposited']:.0f}, "
-            f"fayda/nuksaan {st['equity'] - st['deposited']:+.0f}")
+    return msg(f"📊 MAHINE KA HISAAB: {pd.Timestamp(month + '-01').strftime('%b %Y')}",
+               [f"Trades: {len(tr)}", f"Jeet: {wins}  |  Haar: {len(tr) - wins}",
+                f"Is mahine ka P/L: {'+' if pnl >= 0 else ''}{n(pnl)}"], _money(st))
 
 
 def step(st: dict, f: pd.DataFrame, mask: np.ndarray) -> tuple[dict, list[str]]:
@@ -87,13 +107,15 @@ def step(st: dict, f: pd.DataFrame, mask: np.ndarray) -> tuple[dict, list[str]]:
             st["deposited"] += s["monthly_add"]
             st["peak"] = max(st["peak"], st["equity"])
             st["deposits"].append({"month": month, "amount": s["monthly_add"]})
-            msgs.append(f"Naya mahina {month}: +{s['monthly_add']:.0f} joda (paper). Account ab {st['equity']:.0f}")
+            msgs.append(msg(f"💰 NAYA MAHINA: +{n(s['monthly_add'])} joda (paper)", _money(st)))
             if st["risk"] < s["risk_upgraded"] and len(st["months_done"]) >= s["upgrade_after_months"]:
-                n = len(st["trades"])
+                n_tr = len(st["trades"])
                 tot = sum(x["R"] for x in st["trades"])
-                if n >= s["upgrade_min_trades"] and tot > 0:
+                if n_tr >= s["upgrade_min_trades"] and tot > 0:
                     st["risk"] = s["risk_upgraded"]
-                    msgs.append(f"Plan rule: {n} trades, kul {tot:+.1f}R plus -> risk ab {100 * st['risk']:.0f}% per trade")
+                    msgs.append(msg("⬆️ RISK BADHA (plan ka rule)",
+                                    [f"{n_tr} trades, kul result {tot:+.1f}R (plus)",
+                                     f"Ab har trade ka risk: {100 * st['risk']:.0f}%"]))
         # ---- fill a pending entry at this candle's open
         if st["pending"] and not st["open"]:
             p = st["pending"]
@@ -108,10 +130,16 @@ def step(st: dict, f: pd.DataFrame, mask: np.ndarray) -> tuple[dict, list[str]]:
                           "equity_at_entry": st["equity"], "risk_used": st["risk"]}
             st["pending"] = None
             op = st["open"]
-            msgs.append(f"PAPER ENTRY BTC LONG bhar gaya @ {entry:.1f} ({ist(t)})\n"
-                        f"SL {op['stop']:.1f} ({op['stop_pct']:.2f}%), Target {op['target']:.1f}\n"
-                        f"position {pos:.0f} (qty {op['qty']:.5f} BTC), 30x margin {op['margin_30x']:.0f}, "
-                        f"SL lage to loss ~{op['risk_amt']:.0f}")
+            msgs.append(msg("✅ ENTRY HO GAYI: BUY (LONG)",
+                            [f"Coin: BTC/USDT Futures (CoinDCX)", f"Time: {ist(t)}",
+                             f"Entry price: {n(entry, 1)}",
+                             f"🛑 Stop Loss: {n(op['stop'], 1)}  (-{op['stop_pct']:.2f}%)",
+                             f"🎯 Target: {n(op['target'], 1)}  (+{s['rr'] * op['stop_pct']:.2f}%)",
+                             "⏱ 48 ghante me kuch na lage to band"],
+                            [f"Position: {n(pos)}  (qty {op['qty']:.4f} BTC)",
+                             f"Margin (30x): {n(op['margin_30x'])}",
+                             f"SL lage to loss: ~{n(op['risk_amt'])}",
+                             f"Target lage to profit: ~{n(op['risk_amt'] * s['rr'])}"]))
         # ---- manage the open position on this candle
         if st["open"]:
             op = st["open"]
@@ -141,13 +169,17 @@ def step(st: dict, f: pd.DataFrame, mask: np.ndarray) -> tuple[dict, list[str]]:
                       "equity": round(st["equity"], 2)}
                 st["trades"].append(tr)
                 st["open"] = None
-                msgs.append(f"PAPER EXIT BTC LONG - {reason}\nentry {tr['entry']:.1f} -> exit {tr['exit']:.1f}\n"
-                            f"result {R:+.2f}R, P/L {pnl:+.0f}\naccount {st['equity']:.0f} "
-                            f"(kul daala {st['deposited']:.0f}, fayda {st['equity'] - st['deposited']:+.0f})")
+                why = {"SL": "🔴 STOP LOSS laga", "TP": "🟢 TARGET laga"}.get(reason, "⏱ 48 GHANTE pure, trade band")
+                msgs.append(msg(f"{why} — TRADE BAND (EXIT)",
+                                [f"Entry: {n(tr['entry'], 1)}  →  Exit: {n(tr['exit'], 1)}",
+                                 f"Time: {ist(t + H)}",
+                                 f"Is trade ka P/L: {'+' if pnl >= 0 else ''}{n(pnl)}  ({R:+.2f}R)"], _money(st)))
                 dd = (st["peak"] - st["equity"]) / st["peak"]
                 if dd >= s["dd_alert"] and not st["dd_alerted"]:
                     st["dd_alerted"] = True
-                    msgs.append(f"RULE ALERT: account best level se {100 * dd:.0f}% neeche. Plan ke hisaab se RUKO aur check karo.")
+                    msgs.append(msg("⚠️ RULE ALERT: RUKO AUR CHECK KARO",
+                                    [f"Account apne best level se {100 * dd:.0f}% neeche hai.",
+                                     "Plan ke hisaab se naye trade se pehle check karo."], _money(st)))
                 elif dd < s["dd_alert"] / 2:
                     st["dd_alerted"] = False
         # ---- new signal on this closed candle (only when flat)
@@ -157,10 +189,19 @@ def step(st: dict, f: pd.DataFrame, mask: np.ndarray) -> tuple[dict, list[str]]:
                 st["pending"] = {"signal_time": str(t), "stop_dist": d}
                 risk_amt = st["equity"] * st["risk"]
                 pos = min(risk_amt / (d / c[i]), st["equity"] * s["max_leverage"])
-                msgs.append(f"PAPER SIGNAL BTC LONG (koi asli order nahi)\ncandle band {ist(t + H)}, close {c[i]:.1f}\n"
-                            f"agli candle ke open par BUY. Andaaza: SL ~{c[i] - d:.1f} ({100 * d / c[i]:.2f}%), "
-                            f"Target ~{c[i] + s['rr'] * d:.1f}\nposition ~{pos:.0f} (risk {100 * st['risk']:.0f}% = {risk_amt:.0f}), "
-                            f"30x margin ~{pos / s['max_leverage']:.0f}")
+                sp = 100 * d / c[i]
+                msgs.append(msg("📢 SIGNAL: BUY (LONG)",
+                                [f"Coin: BTC/USDT Futures (CoinDCX)",
+                                 f"Kab: {ist(t + H)} se shuru hone wali candle ke OPEN par",
+                                 f"Abhi ka price: ~{n(c[i], 1)}",
+                                 f"🛑 Stop Loss: ~{n(c[i] - d, 1)}  (-{sp:.2f}%)",
+                                 f"🎯 Target: ~{n(c[i] + s['rr'] * d, 1)}  (+{s['rr'] * sp:.2f}%)",
+                                 "(pakka entry, SL, target agle message me)"],
+                                [f"Account: {n(st['equity'])}, risk {100 * st['risk']:.0f}%",
+                                 f"Position: ~{n(pos)}",
+                                 f"Margin (30x): ~{n(pos / s['max_leverage'])}",
+                                 f"SL lage to loss: ~{n(risk_amt)}",
+                                 f"Target lage to profit: ~{n(risk_amt * s['rr'])}"]))
         st["last_bar"] = str(t)
     return st, msgs
 
@@ -222,7 +263,7 @@ def run(state_path: Path, out: Path, *, f: pd.DataFrame | None = None, send=None
         last = f.index[-1]
         st = new_state(last, last.strftime("%Y-%m"))
         s = st["settings"]
-        msgs_pre = [f"BTC 1h PAPER TRADE shuru (koi asli order nahi)\ncapital {s['start_capital']:.0f}, har mahine +{s['monthly_add']:.0f}, "
+        msgs_pre = [HEAD + "\n" + LINE + "\n" + f"▶️ SHURU\ncapital {s['start_capital']:.0f}, har mahine +{s['monthly_add']:.0f}, "
                     f"risk {100 * s['risk']:.0f}% per trade\nSetup: 1h strong green candle + volume + ADX>25 + EMA20>EMA50, "
                     f"SL 1.5 ATR, target 3R, 48h max.\nSignal aane par yahin message aayega."]
     st, msgs = step(st, f, mask)
