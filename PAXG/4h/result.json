@@ -1,0 +1,992 @@
+{
+  "label": "PAXG 4h",
+  "tf": "4h",
+  "bars": 3486,
+  "first": "2025-03-27 08:00:00+00:00",
+  "last": "2026-10-29 04:00:00+00:00",
+  "segments": {
+    "dev": [
+      "2025-05-08 00:00:00+00:00",
+      "2026-01-11 16:00:00+00:00"
+    ],
+    "val": [
+      "2026-01-11 20:00:00+00:00",
+      "2026-06-05 20:00:00+00:00"
+    ],
+    "test": [
+      "2026-06-06 00:00:00+00:00",
+      "2026-10-29 04:00:00+00:00"
+    ]
+  },
+  "buy_hold_pct": {
+    "dev": 33.37,
+    "val": -4.23,
+    "test": -6.49
+  },
+  "configs_tested": 1331,
+  "null_best_dev_t": [
+    1.22,
+    -0.52,
+    0.68,
+    1.24,
+    1.71,
+    1.7,
+    0.46,
+    1.21,
+    1.01,
+    2.06,
+    0.83,
+    1.52,
+    1.26,
+    -0.7,
+    1.01,
+    1.56,
+    3.4,
+    1.37,
+    1.48,
+    1.96
+  ],
+  "real_best_stageA_dev_t": 2.25,
+  "real_beats_null_pct": 0.95,
+  "cost_per_side_pct": 0.079,
+  "min_stop_pct": 0.25,
+  "finalists": [
+    {
+      "id": "LONG_fvg_structure+ema200_side_sl4.0_rr1.5_h96",
+      "side": "LONG",
+      "family": "fvg",
+      "filters": "structure+ema200_side",
+      "sl_atr": 4.0,
+      "rr": 1.5,
+      "hold_h": 96,
+      "sel_score": 1.581,
+      "segments": {
+        "dev": {
+          "n": 35,
+          "win_rate": 0.6571,
+          "exp_R": 0.4115,
+          "sum_R": 14.4,
+          "pf": 3.07,
+          "avg_win_R": 0.929,
+          "avg_loss_R": -0.58,
+          "t_stat": 2.839,
+          "max_dd_pct": 1.4,
+          "max_loss_streak": 3,
+          "end_equity": 1153.13,
+          "exp_ret_pct": 0.7713,
+          "exposure_pct": 45.01,
+          "gross_exp_R": 0.544
+        },
+        "val": {
+          "n": 15,
+          "win_rate": 0.6667,
+          "exp_R": 0.3587,
+          "sum_R": 5.38,
+          "pf": 2.871,
+          "avg_win_R": 0.826,
+          "avg_loss_R": -0.575,
+          "t_stat": 1.581,
+          "max_dd_pct": 1.51,
+          "max_loss_streak": 2,
+          "end_equity": 1054.62,
+          "exp_ret_pct": 0.5839,
+          "exposure_pct": 31.92,
+          "gross_exp_R": 0.4393
+        },
+        "test": {
+          "n": 9,
+          "win_rate": 0.3333,
+          "exp_R": -0.1915,
+          "sum_R": -1.72,
+          "pf": 0.603,
+          "avg_win_R": 0.873,
+          "avg_loss_R": -0.724,
+          "t_stat": -0.655,
+          "max_dd_pct": 2.97,
+          "max_loss_streak": 3,
+          "end_equity": 982.59,
+          "exp_ret_pct": -0.313,
+          "exposure_pct": 20.3,
+          "gross_exp_R": -0.0858
+        }
+      },
+      "test_cost_sensitivity": {
+        "0.0": {
+          "n": 9,
+          "exp_R": -0.0858,
+          "pf": 0.79,
+          "sum_R": -0.77
+        },
+        "0.5": {
+          "n": 9,
+          "exp_R": -0.1581,
+          "pf": 0.655,
+          "sum_R": -1.42
+        },
+        "1.0": {
+          "n": 9,
+          "exp_R": -0.1915,
+          "pf": 0.603,
+          "sum_R": -1.72
+        },
+        "1.5": {
+          "n": 9,
+          "exp_R": -0.225,
+          "pf": 0.556,
+          "sum_R": -2.02
+        },
+        "2.0": {
+          "n": 9,
+          "exp_R": -0.2584,
+          "pf": 0.513,
+          "sum_R": -2.33
+        }
+      },
+      "param_stability": {
+        "exit_variants": 24,
+        "dev_positive": 0.8333333333333334,
+        "val_positive": 0.7083333333333334,
+        "both_positive": 0.6666666666666666
+      },
+      "walk_forward": {
+        "folds": [
+          {
+            "test_from": "2026-05-08 00:00:00+00:00",
+            "chosen": "sl4.0_rr1.5_h96",
+            "train_t": 3.43,
+            "oos_n": 1,
+            "oos_sum_R": -0.6
+          }
+        ],
+        "oos_n": 1,
+        "oos_sum_R": -0.6,
+        "oos_exp_R": -0.5983,
+        "pos_fold_share": 0.0
+      },
+      "regime": {
+        "range/high_vol": {
+          "n": 11,
+          "exp_R": 0.52
+        },
+        "range/low_vol": {
+          "n": 13,
+          "exp_R": 0.659
+        },
+        "trend/high_vol": {
+          "n": 19,
+          "exp_R": 0.016
+        },
+        "trend/low_vol": {
+          "n": 16,
+          "exp_R": 0.217
+        }
+      },
+      "checks": {
+        "test_trades_enough": false,
+        "test_net_positive": false,
+        "test_pf_ok": false,
+        "val_net_positive": true,
+        "test_survives_1.5x_costs": false,
+        "walk_forward_ok": false,
+        "neighbours_stable": true,
+        "beats_null_search": true
+      },
+      "verdict": "INCONCLUSIVE (too few test trades)",
+      "files": [
+        "trades_0_LONG.csv",
+        "monthly_0_LONG.csv"
+      ]
+    },
+    {
+      "id": "LONG_donchian_bo20_-_sl4.0_rr2.0_h96",
+      "side": "LONG",
+      "family": "donchian_bo20",
+      "filters": "-",
+      "sl_atr": 4.0,
+      "rr": 2.0,
+      "hold_h": 96,
+      "sel_score": 0.952,
+      "segments": {
+        "dev": {
+          "n": 32,
+          "win_rate": 0.6562,
+          "exp_R": 0.3463,
+          "sum_R": 11.08,
+          "pf": 2.22,
+          "avg_win_R": 0.96,
+          "avg_loss_R": -0.826,
+          "t_stat": 1.863,
+          "max_dd_pct": 2.65,
+          "max_loss_streak": 2,
+          "end_equity": 1115.09,
+          "exp_ret_pct": 0.6687,
+          "exposure_pct": 41.53,
+          "gross_exp_R": 0.4961
+        },
+        "val": {
+          "n": 18,
+          "win_rate": 0.5556,
+          "exp_R": 0.2438,
+          "sum_R": 4.39,
+          "pf": 1.756,
+          "avg_win_R": 1.019,
+          "avg_loss_R": -0.726,
+          "t_stat": 0.952,
+          "max_dd_pct": 3.64,
+          "max_loss_streak": 3,
+          "end_equity": 1043.76,
+          "exp_ret_pct": 0.457,
+          "exposure_pct": 38.12,
+          "gross_exp_R": 0.3253
+        },
+        "test": {
+          "n": 12,
+          "win_rate": 0.5,
+          "exp_R": 0.0477,
+          "sum_R": 0.57,
+          "pf": 1.1,
+          "avg_win_R": 1.05,
+          "avg_loss_R": -0.955,
+          "t_stat": 0.138,
+          "max_dd_pct": 2.49,
+          "max_loss_streak": 3,
+          "end_equity": 1004.95,
+          "exp_ret_pct": -0.0594,
+          "exposure_pct": 25.0,
+          "gross_exp_R": 0.1544
+        }
+      },
+      "test_cost_sensitivity": {
+        "0.0": {
+          "n": 12,
+          "exp_R": 0.1544,
+          "pf": 1.361,
+          "sum_R": 1.85
+        },
+        "0.5": {
+          "n": 12,
+          "exp_R": 0.0823,
+          "pf": 1.179,
+          "sum_R": 0.99
+        },
+        "1.0": {
+          "n": 12,
+          "exp_R": 0.0477,
+          "pf": 1.1,
+          "sum_R": 0.57
+        },
+        "1.5": {
+          "n": 12,
+          "exp_R": 0.0131,
+          "pf": 1.026,
+          "sum_R": 0.16
+        },
+        "2.0": {
+          "n": 12,
+          "exp_R": -0.0215,
+          "pf": 0.958,
+          "sum_R": -0.26
+        }
+      },
+      "param_stability": {
+        "exit_variants": 24,
+        "dev_positive": 0.9166666666666666,
+        "val_positive": 0.7916666666666666,
+        "both_positive": 0.7916666666666666
+      },
+      "walk_forward": {
+        "folds": [
+          {
+            "test_from": "2026-05-08 00:00:00+00:00",
+            "chosen": "sl4.0_rr2.0_h96",
+            "train_t": 2.68,
+            "oos_n": 8,
+            "oos_sum_R": -4.03
+          }
+        ],
+        "oos_n": 8,
+        "oos_sum_R": -4.03,
+        "oos_exp_R": -0.504,
+        "pos_fold_share": 0.0
+      },
+      "regime": {
+        "range/high_vol": {
+          "n": 11,
+          "exp_R": 0.383
+        },
+        "range/low_vol": {
+          "n": 19,
+          "exp_R": 0.364
+        },
+        "trend/high_vol": {
+          "n": 18,
+          "exp_R": 0.009
+        },
+        "trend/low_vol": {
+          "n": 14,
+          "exp_R": 0.339
+        }
+      },
+      "checks": {
+        "test_trades_enough": false,
+        "test_net_positive": true,
+        "test_pf_ok": false,
+        "val_net_positive": true,
+        "test_survives_1.5x_costs": true,
+        "walk_forward_ok": false,
+        "neighbours_stable": true,
+        "beats_null_search": true
+      },
+      "verdict": "INCONCLUSIVE (too few test trades)",
+      "files": [
+        "trades_1_LONG.csv",
+        "monthly_1_LONG.csv"
+      ]
+    },
+    {
+      "id": "LONG_bos_-_sl4.0_rr1.5_h96",
+      "side": "LONG",
+      "family": "bos",
+      "filters": "-",
+      "sl_atr": 4.0,
+      "rr": 1.5,
+      "hold_h": 96,
+      "sel_score": 0.726,
+      "segments": {
+        "dev": {
+          "n": 43,
+          "win_rate": 0.6047,
+          "exp_R": 0.2176,
+          "sum_R": 9.36,
+          "pf": 1.674,
+          "avg_win_R": 0.894,
+          "avg_loss_R": -0.817,
+          "t_stat": 1.497,
+          "max_dd_pct": 3.76,
+          "max_loss_streak": 3,
+          "end_equity": 1095.89,
+          "exp_ret_pct": 0.43,
+          "exposure_pct": 51.44,
+          "gross_exp_R": 0.3523
+        },
+        "val": {
+          "n": 23,
+          "win_rate": 0.5652,
+          "exp_R": 0.1255,
+          "sum_R": 2.89,
+          "pf": 1.458,
+          "avg_win_R": 0.706,
+          "avg_loss_R": -0.629,
+          "t_stat": 0.726,
+          "max_dd_pct": 5.38,
+          "max_loss_streak": 4,
+          "end_equity": 1028.48,
+          "exp_ret_pct": 0.5028,
+          "exposure_pct": 49.48,
+          "gross_exp_R": 0.2122
+        },
+        "test": {
+          "n": 21,
+          "win_rate": 0.381,
+          "exp_R": -0.2629,
+          "sum_R": -5.52,
+          "pf": 0.483,
+          "avg_win_R": 0.644,
+          "avg_loss_R": -0.821,
+          "t_stat": -1.428,
+          "max_dd_pct": 5.45,
+          "max_loss_streak": 4,
+          "end_equity": 945.54,
+          "exp_ret_pct": -0.4626,
+          "exposure_pct": 43.81,
+          "gross_exp_R": -0.1556
+        }
+      },
+      "test_cost_sensitivity": {
+        "0.0": {
+          "n": 21,
+          "exp_R": -0.1556,
+          "pf": 0.646,
+          "sum_R": -3.27
+        },
+        "0.5": {
+          "n": 21,
+          "exp_R": -0.228,
+          "pf": 0.53,
+          "sum_R": -4.79
+        },
+        "1.0": {
+          "n": 21,
+          "exp_R": -0.2629,
+          "pf": 0.483,
+          "sum_R": -5.52
+        },
+        "1.5": {
+          "n": 21,
+          "exp_R": -0.2978,
+          "pf": 0.441,
+          "sum_R": -6.25
+        },
+        "2.0": {
+          "n": 21,
+          "exp_R": -0.3328,
+          "pf": 0.403,
+          "sum_R": -6.99
+        }
+      },
+      "param_stability": {
+        "exit_variants": 24,
+        "dev_positive": 0.75,
+        "val_positive": 0.5833333333333334,
+        "both_positive": 0.5833333333333334
+      },
+      "walk_forward": {
+        "folds": [
+          {
+            "test_from": "2026-05-08 00:00:00+00:00",
+            "chosen": "sl4.0_rr1.5_h96",
+            "train_t": 2.28,
+            "oos_n": 15,
+            "oos_sum_R": -7.04
+          }
+        ],
+        "oos_n": 15,
+        "oos_sum_R": -7.04,
+        "oos_exp_R": -0.4695,
+        "pos_fold_share": 0.0
+      },
+      "regime": {
+        "range/high_vol": {
+          "n": 13,
+          "exp_R": 0.286
+        },
+        "range/low_vol": {
+          "n": 21,
+          "exp_R": 0.159
+        },
+        "trend/high_vol": {
+          "n": 24,
+          "exp_R": 0.269
+        },
+        "trend/low_vol": {
+          "n": 29,
+          "exp_R": -0.234
+        }
+      },
+      "checks": {
+        "test_trades_enough": true,
+        "test_net_positive": false,
+        "test_pf_ok": false,
+        "val_net_positive": true,
+        "test_survives_1.5x_costs": false,
+        "walk_forward_ok": false,
+        "neighbours_stable": true,
+        "beats_null_search": true
+      },
+      "verdict": "NO EDGE PROVEN",
+      "files": [
+        "trades_2_LONG.csv",
+        "monthly_2_LONG.csv"
+      ]
+    },
+    {
+      "id": "SHORT_bos_body_strong+close_loc_sl1.5_rr2.0_h96",
+      "side": "SHORT",
+      "family": "bos",
+      "filters": "body_strong+close_loc",
+      "sl_atr": 1.5,
+      "rr": 2.0,
+      "hold_h": 96,
+      "sel_score": -0.455,
+      "segments": {
+        "dev": {
+          "n": 31,
+          "win_rate": 0.3871,
+          "exp_R": -0.1162,
+          "sum_R": -3.6,
+          "pf": 0.842,
+          "avg_win_R": 1.603,
+          "avg_loss_R": -1.202,
+          "t_stat": -0.455,
+          "max_dd_pct": 10.44,
+          "max_loss_streak": 6,
+          "end_equity": 961.68,
+          "exp_ret_pct": -0.0506,
+          "exposure_pct": 20.56,
+          "gross_exp_R": 0.1461
+        },
+        "val": {
+          "n": 22,
+          "win_rate": 0.4545,
+          "exp_R": 0.2139,
+          "sum_R": 4.71,
+          "pf": 1.353,
+          "avg_win_R": 1.804,
+          "avg_loss_R": -1.111,
+          "t_stat": 0.669,
+          "max_dd_pct": 5.8,
+          "max_loss_streak": 5,
+          "end_equity": 1045.67,
+          "exp_ret_pct": 0.1577,
+          "exposure_pct": 15.38,
+          "gross_exp_R": 0.4029
+        },
+        "test": {
+          "n": 22,
+          "win_rate": 0.4545,
+          "exp_R": 0.1734,
+          "sum_R": 3.82,
+          "pf": 1.283,
+          "avg_win_R": 1.732,
+          "avg_loss_R": -1.125,
+          "t_stat": 0.552,
+          "max_dd_pct": 4.93,
+          "max_loss_streak": 4,
+          "end_equity": 1036.51,
+          "exp_ret_pct": 0.0799,
+          "exposure_pct": 21.56,
+          "gross_exp_R": 0.4132
+        }
+      },
+      "test_cost_sensitivity": {
+        "0.0": {
+          "n": 22,
+          "exp_R": 0.4132,
+          "pf": 1.826,
+          "sum_R": 9.09
+        },
+        "0.5": {
+          "n": 22,
+          "exp_R": 0.268,
+          "pf": 1.473,
+          "sum_R": 5.9
+        },
+        "1.0": {
+          "n": 22,
+          "exp_R": 0.1734,
+          "pf": 1.283,
+          "sum_R": 3.82
+        },
+        "1.5": {
+          "n": 22,
+          "exp_R": 0.0789,
+          "pf": 1.119,
+          "sum_R": 1.74
+        },
+        "2.0": {
+          "n": 22,
+          "exp_R": -0.0156,
+          "pf": 0.978,
+          "sum_R": -0.34
+        }
+      },
+      "param_stability": {
+        "exit_variants": 24,
+        "dev_positive": 0.0,
+        "val_positive": 0.7083333333333334,
+        "both_positive": 0.0
+      },
+      "walk_forward": {
+        "folds": [
+          {
+            "test_from": "2026-05-08 00:00:00+00:00",
+            "chosen": "sl1.5_rr2.0_h96",
+            "train_t": -0.06,
+            "oos_n": 17,
+            "oos_sum_R": 2.52
+          }
+        ],
+        "oos_n": 17,
+        "oos_sum_R": 2.52,
+        "oos_exp_R": 0.1481,
+        "pos_fold_share": 1.0
+      },
+      "regime": {
+        "range/high_vol": {
+          "n": 14,
+          "exp_R": -0.028
+        },
+        "range/low_vol": {
+          "n": 20,
+          "exp_R": -0.051
+        },
+        "trend/high_vol": {
+          "n": 22,
+          "exp_R": 0.018
+        },
+        "trend/low_vol": {
+          "n": 19,
+          "exp_R": 0.312
+        }
+      },
+      "checks": {
+        "test_trades_enough": true,
+        "test_net_positive": true,
+        "test_pf_ok": true,
+        "val_net_positive": true,
+        "test_survives_1.5x_costs": true,
+        "walk_forward_ok": true,
+        "neighbours_stable": false,
+        "beats_null_search": true
+      },
+      "verdict": "NO EDGE PROVEN",
+      "files": [
+        "trades_3_SHORT.csv",
+        "monthly_3_SHORT.csv"
+      ]
+    },
+    {
+      "id": "SHORT_ema_pullback_-_sl1.5_rr3.0_h24",
+      "side": "SHORT",
+      "family": "ema_pullback",
+      "filters": "-",
+      "sl_atr": 1.5,
+      "rr": 3.0,
+      "hold_h": 24,
+      "sel_score": -1.318,
+      "segments": {
+        "dev": {
+          "n": 35,
+          "win_rate": 0.2,
+          "exp_R": -0.2163,
+          "sum_R": -7.57,
+          "pf": 0.562,
+          "avg_win_R": 1.387,
+          "avg_loss_R": -0.617,
+          "t_stat": -1.318,
+          "max_dd_pct": 7.45,
+          "max_loss_streak": 11,
+          "end_equity": 925.52,
+          "exp_ret_pct": -0.2592,
+          "exposure_pct": 12.26,
+          "gross_exp_R": 0.0142
+        },
+        "val": {
+          "n": 26,
+          "win_rate": 0.5,
+          "exp_R": 0.1408,
+          "sum_R": 3.66,
+          "pf": 1.352,
+          "avg_win_R": 1.082,
+          "avg_loss_R": -0.8,
+          "t_stat": 0.587,
+          "max_dd_pct": 3.73,
+          "max_loss_streak": 3,
+          "end_equity": 1035.33,
+          "exp_ret_pct": 0.0936,
+          "exposure_pct": 14.01,
+          "gross_exp_R": 0.3161
+        },
+        "test": {
+          "n": 33,
+          "win_rate": 0.2727,
+          "exp_R": -0.1091,
+          "sum_R": -3.6,
+          "pf": 0.78,
+          "avg_win_R": 1.416,
+          "avg_loss_R": -0.681,
+          "t_stat": -0.565,
+          "max_dd_pct": 10.32,
+          "max_loss_streak": 9,
+          "end_equity": 962.72,
+          "exp_ret_pct": -0.1154,
+          "exposure_pct": 19.84,
+          "gross_exp_R": 0.0995
+        }
+      },
+      "test_cost_sensitivity": {
+        "0.0": {
+          "n": 33,
+          "exp_R": 0.0995,
+          "pf": 1.267,
+          "sum_R": 3.29
+        },
+        "0.5": {
+          "n": 33,
+          "exp_R": -0.0193,
+          "pf": 0.956,
+          "sum_R": -0.64
+        },
+        "1.0": {
+          "n": 33,
+          "exp_R": -0.1091,
+          "pf": 0.78,
+          "sum_R": -3.6
+        },
+        "1.5": {
+          "n": 33,
+          "exp_R": -0.1989,
+          "pf": 0.644,
+          "sum_R": -6.57
+        },
+        "2.0": {
+          "n": 33,
+          "exp_R": -0.2888,
+          "pf": 0.536,
+          "sum_R": -9.53
+        }
+      },
+      "param_stability": {
+        "exit_variants": 24,
+        "dev_positive": 0.0,
+        "val_positive": 0.9166666666666666,
+        "both_positive": 0.0
+      },
+      "walk_forward": {
+        "folds": [
+          {
+            "test_from": "2026-05-08 00:00:00+00:00",
+            "chosen": "sl4.0_rr1.0_h24",
+            "train_t": -0.36,
+            "oos_n": 21,
+            "oos_sum_R": -0.41
+          }
+        ],
+        "oos_n": 21,
+        "oos_sum_R": -0.41,
+        "oos_exp_R": -0.0195,
+        "pos_fold_share": 0.0
+      },
+      "regime": {
+        "range/high_vol": {
+          "n": 22,
+          "exp_R": 0.059
+        },
+        "range/low_vol": {
+          "n": 24,
+          "exp_R": 0.154
+        },
+        "trend/high_vol": {
+          "n": 23,
+          "exp_R": -0.275
+        },
+        "trend/low_vol": {
+          "n": 25,
+          "exp_R": -0.247
+        }
+      },
+      "checks": {
+        "test_trades_enough": true,
+        "test_net_positive": false,
+        "test_pf_ok": false,
+        "val_net_positive": true,
+        "test_survives_1.5x_costs": false,
+        "walk_forward_ok": false,
+        "neighbours_stable": false,
+        "beats_null_search": true
+      },
+      "verdict": "NO EDGE PROVEN",
+      "files": [
+        "trades_4_SHORT.csv",
+        "monthly_4_SHORT.csv"
+      ]
+    },
+    {
+      "id": "SHORT_rsi_rev30_-_sl2.5_rr1.0_h24",
+      "side": "SHORT",
+      "family": "rsi_rev30",
+      "filters": "-",
+      "sl_atr": 2.5,
+      "rr": 1.0,
+      "hold_h": 24,
+      "sel_score": -1.405,
+      "segments": {
+        "dev": {
+          "n": 37,
+          "win_rate": 0.4054,
+          "exp_R": -0.1029,
+          "sum_R": -3.81,
+          "pf": 0.729,
+          "avg_win_R": 0.684,
+          "avg_loss_R": -0.639,
+          "t_stat": -0.831,
+          "max_dd_pct": 5.05,
+          "max_loss_streak": 4,
+          "end_equity": 961.64,
+          "exp_ret_pct": -0.0518,
+          "exposure_pct": 12.79,
+          "gross_exp_R": 0.0393
+        },
+        "val": {
+          "n": 15,
+          "win_rate": 0.2667,
+          "exp_R": -0.2438,
+          "sum_R": -3.66,
+          "pf": 0.412,
+          "avg_win_R": 0.641,
+          "avg_loss_R": -0.566,
+          "t_stat": -1.405,
+          "max_dd_pct": 3.96,
+          "max_loss_streak": 6,
+          "end_equity": 963.74,
+          "exp_ret_pct": -0.1614,
+          "exposure_pct": 9.41,
+          "gross_exp_R": -0.1481
+        },
+        "test": {
+          "n": 7,
+          "win_rate": 0.1429,
+          "exp_R": -0.5859,
+          "sum_R": -4.1,
+          "pf": 0.013,
+          "avg_win_R": 0.055,
+          "avg_loss_R": -0.693,
+          "t_stat": -3.41,
+          "max_dd_pct": 4.04,
+          "max_loss_streak": 5,
+          "end_equity": 959.64,
+          "exp_ret_pct": -0.9366,
+          "exposure_pct": 4.59,
+          "gross_exp_R": -0.4686
+        }
+      },
+      "test_cost_sensitivity": {
+        "0.0": {
+          "n": 7,
+          "exp_R": -0.4686,
+          "pf": 0.054,
+          "sum_R": -3.28
+        },
+        "0.5": {
+          "n": 7,
+          "exp_R": -0.5357,
+          "pf": 0.028,
+          "sum_R": -3.75
+        },
+        "1.0": {
+          "n": 7,
+          "exp_R": -0.5859,
+          "pf": 0.013,
+          "sum_R": -4.1
+        },
+        "1.5": {
+          "n": 7,
+          "exp_R": -0.636,
+          "pf": 0.0,
+          "sum_R": -4.45
+        },
+        "2.0": {
+          "n": 7,
+          "exp_R": -0.6861,
+          "pf": 0.0,
+          "sum_R": -4.8
+        }
+      },
+      "param_stability": {
+        "exit_variants": 24,
+        "dev_positive": 0.0,
+        "val_positive": 0.0,
+        "both_positive": 0.0
+      },
+      "walk_forward": {
+        "folds": [
+          {
+            "test_from": "2026-05-08 00:00:00+00:00",
+            "chosen": "sl2.5_rr1.0_h24",
+            "train_t": -1.36,
+            "oos_n": 2,
+            "oos_sum_R": -0.24
+          }
+        ],
+        "oos_n": 2,
+        "oos_sum_R": -0.24,
+        "oos_exp_R": -0.1192,
+        "pos_fold_share": 0.0
+      },
+      "regime": {
+        "range/high_vol": {
+          "n": 3,
+          "exp_R": -0.098
+        },
+        "range/low_vol": {
+          "n": 4,
+          "exp_R": -0.302
+        },
+        "trend/high_vol": {
+          "n": 31,
+          "exp_R": -0.223
+        },
+        "trend/low_vol": {
+          "n": 21,
+          "exp_R": -0.15
+        }
+      },
+      "checks": {
+        "test_trades_enough": false,
+        "test_net_positive": false,
+        "test_pf_ok": false,
+        "val_net_positive": false,
+        "test_survives_1.5x_costs": false,
+        "walk_forward_ok": false,
+        "neighbours_stable": false,
+        "beats_null_search": true
+      },
+      "verdict": "INCONCLUSIVE (too few test trades)",
+      "files": [
+        "trades_5_SHORT.csv",
+        "monthly_5_SHORT.csv"
+      ]
+    }
+  ],
+  "baseline_every_bar": [
+    {
+      "family": "BASE_every_bar",
+      "side": "LONG",
+      "sl_atr": 4.0,
+      "rr": 3.0,
+      "hold_h": 96,
+      "filters": "-",
+      "dev_n": 70,
+      "dev_exp_R": 0.144,
+      "dev_t_stat": 1.21,
+      "dev_pf": 1.436,
+      "dev_win_rate": 0.5286,
+      "dev_max_dd_pct": 5.91,
+      "dev_gross_exp_R": 0.2821,
+      "val_n": 43,
+      "val_exp_R": -0.0704,
+      "val_t_stat": -0.427,
+      "val_pf": 0.844,
+      "val_win_rate": 0.4186,
+      "val_max_dd_pct": 10.96,
+      "val_gross_exp_R": 0.0146,
+      "test_n": 41,
+      "test_exp_R": -0.1513,
+      "test_t_stat": -1.049,
+      "test_pf": 0.647,
+      "test_win_rate": 0.3171,
+      "test_max_dd_pct": 7.77,
+      "test_gross_exp_R": -0.0387
+    },
+    {
+      "family": "BASE_every_bar",
+      "side": "SHORT",
+      "sl_atr": 4.0,
+      "rr": 1.0,
+      "hold_h": 96,
+      "filters": "-",
+      "dev_n": 81,
+      "dev_exp_R": -0.3362,
+      "dev_t_stat": -3.94,
+      "dev_pf": 0.378,
+      "dev_win_rate": 0.358,
+      "dev_max_dd_pct": 25.41,
+      "dev_gross_exp_R": -0.2105,
+      "val_n": 49,
+      "val_exp_R": -0.0821,
+      "val_t_stat": -0.721,
+      "val_pf": 0.79,
+      "val_win_rate": 0.4694,
+      "val_max_dd_pct": 7.96,
+      "val_gross_exp_R": -0.0024,
+      "test_n": 49,
+      "test_exp_R": -0.0704,
+      "test_t_stat": -0.624,
+      "test_pf": 0.817,
+      "test_win_rate": 0.4286,
+      "test_max_dd_pct": 7.98,
+      "test_gross_exp_R": 0.0314
+    }
+  ],
+  "runtime_s": 2.3
+}

@@ -1,0 +1,111 @@
+[
+  {
+    "tf": "1h",
+    "rows_raw": 26278,
+    "duplicates": 0,
+    "off_grid_timestamps": 0,
+    "invalid_ohlc_dropped": 0,
+    "zero_volume_bars": 0,
+    "outlier_bars_robust_z_gt_15": 6,
+    "largest_abs_bar_return_pct": 5.03,
+    "first_bar": "2023-10-30 05:00:00+00:00",
+    "last_bar": "2026-10-29 04:00:00+00:00",
+    "coverage_days": 1094.96,
+    "expected_bars": 26280,
+    "rows_clean": 26278,
+    "missing_bars": 2,
+    "missing_pct": 0.008,
+    "largest_gaps": [
+      {
+        "ends_at": "2024-09-23 00:00:00+00:00",
+        "length": "0 days 03:00:00"
+      }
+    ],
+    "status": "WARN",
+    "issues": [
+      "6 extreme-return bars (kept, flagged)"
+    ],
+    "asset": "BTC",
+    "pair": "B-BTC_USDT",
+    "source": "coindcx",
+    "derived_from": "direct"
+  },
+  {
+    "tf": "4h",
+    "rows_raw": 6571,
+    "duplicates": 0,
+    "off_grid_timestamps": 0,
+    "invalid_ohlc_dropped": 0,
+    "zero_volume_bars": 0,
+    "outlier_bars_robust_z_gt_15": 0,
+    "largest_abs_bar_return_pct": 8.312,
+    "first_bar": "2023-10-30 04:00:00+00:00",
+    "last_bar": "2026-10-29 04:00:00+00:00",
+    "coverage_days": 1095.0,
+    "expected_bars": 6571,
+    "rows_clean": 6571,
+    "missing_bars": 0,
+    "missing_pct": 0.0,
+    "largest_gaps": [],
+    "status": "OK",
+    "issues": [],
+    "asset": "BTC",
+    "pair": "B-BTC_USDT",
+    "source": "coindcx",
+    "derived_from": "1h"
+  },
+  {
+    "tf": "1h",
+    "rows_raw": 13938,
+    "duplicates": 0,
+    "off_grid_timestamps": 0,
+    "invalid_ohlc_dropped": 0,
+    "zero_volume_bars": 0,
+    "outlier_bars_robust_z_gt_15": 10,
+    "largest_abs_bar_return_pct": 5.125,
+    "first_bar": "2025-03-27 11:00:00+00:00",
+    "last_bar": "2026-10-29 04:00:00+00:00",
+    "coverage_days": 580.71,
+    "expected_bars": 13938,
+    "rows_clean": 13938,
+    "missing_bars": 0,
+    "missing_pct": 0.0,
+    "largest_gaps": [],
+    "status": "WARN",
+    "issues": [
+      "coverage 580.71d is below the 1095d target",
+      "10 extreme-return bars (kept, flagged)"
+    ],
+    "asset": "PAXG",
+    "pair": "B-PAXG_USDT",
+    "source": "coindcx",
+    "derived_from": "direct"
+  },
+  {
+    "tf": "4h",
+    "rows_raw": 3486,
+    "duplicates": 0,
+    "off_grid_timestamps": 0,
+    "invalid_ohlc_dropped": 0,
+    "zero_volume_bars": 0,
+    "outlier_bars_robust_z_gt_15": 2,
+    "largest_abs_bar_return_pct": 5.53,
+    "first_bar": "2025-03-27 08:00:00+00:00",
+    "last_bar": "2026-10-29 04:00:00+00:00",
+    "coverage_days": 580.83,
+    "expected_bars": 3486,
+    "rows_clean": 3486,
+    "missing_bars": 0,
+    "missing_pct": 0.0,
+    "largest_gaps": [],
+    "status": "WARN",
+    "issues": [
+      "coverage 580.83d is below the 1095d target",
+      "2 extreme-return bars (kept, flagged)"
+    ],
+    "asset": "PAXG",
+    "pair": "B-PAXG_USDT",
+    "source": "coindcx",
+    "derived_from": "1h"
+  }
+]

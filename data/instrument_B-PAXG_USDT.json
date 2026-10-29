@@ -1,0 +1,81 @@
+{
+  "pair": "B-PAXG_USDT",
+  "n_active_usdt_futures": 504,
+  "listed": true,
+  "similar": [
+    "B-PAXG_USDT"
+  ],
+  "detail": {
+    "instrument": {
+      "settle_currency_short_name": "USDT",
+      "quote_currency_short_name": "USDT",
+      "position_currency_short_name": "PAXG",
+      "underlying_currency_short_name": "PAXG",
+      "status": "active",
+      "pair": "B-PAXG_USDT",
+      "kind": "perpetual",
+      "settlement": "never",
+      "max_leverage_long": 5.0,
+      "max_leverage_short": 5.0,
+      "unit_contract_value": 1.0,
+      "price_increment": 0.01,
+      "quantity_increment": 0.001,
+      "min_trade_size": 0.001,
+      "min_price": 0.0105,
+      "max_price": 40405.4,
+      "min_quantity": 0.001,
+      "max_quantity": 1900.0,
+      "min_notional": 6.0,
+      "maker_fee": 0.0118,
+      "taker_fee": 0.0118,
+      "safety_percentage": 2.0,
+      "quanto_to_settle_multiplier": 1.0,
+      "is_inverse": false,
+      "is_quanto": false,
+      "allow_post_only": false,
+      "allow_hidden": false,
+      "max_market_order_quantity": 200.0,
+      "funding_frequency": 4,
+      "max_notional": 0.0,
+      "expiry_time": 2548162800000,
+      "exit_only": false,
+      "multiplier_up": 4.0,
+      "multiplier_down": 4.0,
+      "liquidation_fee": 1.0,
+      "time_in_force_options": [
+        "good_till_cancel",
+        "immediate_or_cancel",
+        "fill_or_kill"
+      ],
+      "order_types": [
+        "limit_order",
+        "market_order",
+        "stop_limit",
+        "take_profit_limit",
+        "stop_market",
+        "take_profit_market"
+      ],
+      "dynamic_position_leverage_details": {
+        "5": 12500000,
+        "10": 4000000,
+        "15": 3000000,
+        "20": 2000000,
+        "30": 1500000,
+        "40": 1000000,
+        "50": 500000,
+        "100": 10000
+      },
+      "dynamic_safety_margin_details": {
+        "10000": 0.5,
+        "500000": 1,
+        "1000000": 1.4,
+        "1500000": 2,
+        "2000000": 3.5,
+        "3000000": 5,
+        "4000000": 7,
+        "12500000": 20
+      },
+      "margin_currency_short_name": "USDT"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+family,side,sl_atr,rr,hold_h,filters,dev_n,dev_exp_R,dev_t_stat,dev_pf,dev_win_rate,dev_max_dd_pct,dev_gross_exp_R,val_n,val_exp_R,val_t_stat,val_pf,val_win_rate,val_max_dd_pct,val_gross_exp_R,test_n,test_exp_R,test_t_stat,test_pf,test_win_rate,test_max_dd_pct,test_gross_exp_R
+BASE_every_bar,LONG,4.0,3.0,48,-,193,0.0993,1.038,1.204,0.4508,23.36,0.3319,110,-0.2493,-2.182,0.613,0.3273,31.89,-0.0828,109,-0.3445,-3.074,0.517,0.3486,32.82,-0.1125
+BASE_every_bar,SHORT,4.0,3.0,48,-,211,-0.489,-6.784,0.334,0.2607,64.86,-0.2624,109,-0.0393,-0.307,0.93,0.4312,17.19,0.1223,97,-0.1062,-0.771,0.832,0.3608,20.14,0.1424

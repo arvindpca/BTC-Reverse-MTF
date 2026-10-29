@@ -1,0 +1,30 @@
+BTC: B-BTC_USDT listed on CoinDCX futures (504 active USDT pairs)
+BTC 1h: data
+  quality WARN: 1094.96d, 26278 bars, missing 0.008% ['6 extreme-return bars (kept, flagged)']
+  [BTC 1h] stage A: 768 configs (1s)
+  [BTC 1h] stages B/C done: 1579 configs total (2s)
+  [BTC 1h] null control done (9s)
+  [BTC 1h] done in 9s
+BTC 4h: data
+  4h: built from CoinDCX B-BTC_USDT 1h candles
+  quality OK: 1095.0d, 6571 bars, missing 0.0% []
+  [BTC 4h] stage A: 768 configs (0s)
+  [BTC 4h] stages B/C done: 1395 configs total (0s)
+  [BTC 4h] null control done (3s)
+  [BTC 4h] done in 4s
+PAXG: B-PAXG_USDT listed on CoinDCX futures (504 active USDT pairs)
+PAXG 1h: data
+  B-PAXG_USDT 1h: history ends before 2024-08-31 03:00:00+00:00
+  quality WARN: 580.71d, 13938 bars, missing 0.0% ['coverage 580.71d is below the 1095d target', '10 extreme-return bars (kept, flagged)']
+  [PAXG 1h] stage A: 768 configs (1s)
+  [PAXG 1h] stages B/C done: 1551 configs total (1s)
+  [PAXG 1h] null control done (5s)
+  [PAXG 1h] done in 6s
+PAXG 4h: data
+  4h: built from CoinDCX B-PAXG_USDT 1h candles
+  quality WARN: 580.83d, 3486 bars, missing 0.0% ['coverage 580.83d is below the 1095d target', '2 extreme-return bars (kept, flagged)']
+  [PAXG 4h] stage A: 768 configs (0s)
+  [PAXG 4h] stages B/C done: 1331 configs total (0s)
+  [PAXG 4h] null control done (2s)
+  [PAXG 4h] done in 2s
+ALL DONE

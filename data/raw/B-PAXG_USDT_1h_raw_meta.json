@@ -1,0 +1,13 @@
+{
+  "pair": "B-PAXG_USDT",
+  "tf": "1h",
+  "requested_days": 1095,
+  "api_calls": 19,
+  "source": "https://public.coindcx.com/market_data/candlesticks",
+  "pcode": "f",
+  "fetched_at_utc": "2026-10-29T05:32:17.943797+00:00",
+  "rows_raw": 13938,
+  "first": "2025-03-27 11:00:00+00:00",
+  "last": "2026-10-29 04:00:00+00:00",
+  "forming_bar_excluded_from": "2026-10-29 05:00:00+00:00"
+}
