@@ -1,0 +1,24 @@
+<stdin>:6: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+<stdin>:6: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+<stdin>:6: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+<stdin>:10: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`). Please use a specific unit instead.
+now 2026-10-29 05:32:13.410372+00:00 rows 6
+                              open     high      low    close  volume
+open_time                                                            
+2026-10-29 05:30:00+00:00  80352.9  80357.3  80342.0  80345.7  59.433
+2026-10-29 05:31:00+00:00  80345.7  80347.1  80319.7  80319.8  55.240
+2026-10-29 05:32:00+00:00  80319.7  80319.8  80314.8  80314.8   4.434
+now 2026-10-29 05:32:34.418888+00:00 rows 6
+                              open     high      low    close  volume
+open_time                                                            
+2026-10-29 05:30:00+00:00  80352.9  80357.3  80342.0  80345.7  59.433
+2026-10-29 05:31:00+00:00  80345.7  80347.1  80319.7  80319.8  55.240
+2026-10-29 05:32:00+00:00  80319.7  80319.8  80303.7  80303.7  20.027
+now 2026-10-29 05:32:54.744635+00:00 rows 6
+                              open     high      low    close  volume
+open_time                                                            
+2026-10-29 05:30:00+00:00  80352.9  80357.3  80342.0  80345.7  59.433
+2026-10-29 05:31:00+00:00  80345.7  80347.1  80319.7  80319.8  55.240
+2026-10-29 05:32:00+00:00  80319.7  80319.8  80303.7  80310.7  33.218
+20h gap replay rows 1201 2026-10-28 09:33:00+00:00 2026-10-29 05:33:00+00:00 missing -1
+hourly last 2026-10-29 04:00:00+00:00 80220.8
