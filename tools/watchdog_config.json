@@ -1,0 +1,14 @@
+{
+ "interval": [
+  {
+   "wf": "btc1h_live.yml",
+   "gap_min": 180,
+   "label": "BTC 1h paper (LIVE method)"
+  },
+  {
+   "wf": "paper.yml",
+   "gap_min": 150,
+   "label": "PAXG paper"
+  }
+ ]
+}
