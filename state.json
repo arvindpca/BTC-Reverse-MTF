@@ -53,5 +53,7 @@
     }
   ],
   "dd_alerted": false,
-  "months_done": []
+  "months_done": [],
+  "mode": "live",
+  "events": []
 }
