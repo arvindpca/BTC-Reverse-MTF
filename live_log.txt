@@ -1,2 +1,3 @@
 10-29 16:53:48 state loaded: equity 2927.04, trades 1, open False
 10-29 20:00:45   retry 1 for https://public.coindcx.com/market_data/candlesticks: HTTPSConnectionPool(host='public.coindcx.com', port=443): Read timed out. (read timeout=25)
+10-29 21:00:45   retry 1 for https://public.coindcx.com/market_data/candlesticks: HTTPSConnectionPool(host='public.coindcx.com', port=443): Read timed out. (read timeout=25)
