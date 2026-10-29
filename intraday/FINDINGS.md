@@ -61,3 +61,10 @@ Losers vs winners compared on DEV only; filters picked on DEV + VAL; 30 random-n
   "Skip 18:30-24:00 IST" was best on TEST (+0.70R, 17 trades) but worse than base on VAL.
 * Noise features reached scores up to 1.92 vs 2.11 for the best real filter: most of the gain is what luck also gives.
 * Decision: keep the base setup unfiltered. Track the entry hour during paper trading to re-check the evening effect.
+
+## BTC 1h paper trading
+
+* 2026-10-27: hourly paper log started (3000 + 1000/month, 2% risk). Engine reproduces the 120 backtest trades exactly.
+* 2026-10-29: switched to the LIVE method (`intraday/live_btc1h.py`, workflow `btc1h_live.yml`): live-price entry right
+  after the signal candle closes, SL/target watched every ~15 s on 1m candles, instant alerts, 6-hour jobs chained.
+  State, report and trade log stay on the `btc1h-paper-state` branch (same account, history kept).

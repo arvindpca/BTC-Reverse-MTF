@@ -1,0 +1,58 @@
+name: BTC 1h paper trading - LIVE method (no real orders)
+
+# Runs like a real bot: one job loops ~340 min (signal check at every 1h candle close, live entry, SL/target checked
+# every ~15 s on CoinDCX 1m candles, instant Telegram alerts), saves state to 'btc1h-paper-state', then starts the next
+# job. The cron is only a backup restart. Places NO orders, needs no exchange keys. PAXG paper job is separate.
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/btc1h_live.yml", "intraday/live_btc1h.py", "intraday/paper_btc1h.py"]
+  workflow_dispatch:
+  schedule:
+    - cron: "23 */2 * * *"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: btc1h-live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Restore state
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch -q --depth 1 origin btc1h-paper-state; then
+            git worktree add -q --detach /tmp/state FETCH_HEAD
+          else
+            git worktree add -q --detach /tmp/state HEAD && (cd /tmp/state && git rm -rfq . && git clean -fdxq)
+          fi
+          ls /tmp/state
+      - name: Run live paper bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m intraday.live_btc1h --state-dir /tmp/state --minutes 340 --save-cmd "bash intraday/live_save.sh /tmp/state"
+      - name: Start the next run
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS -o /dev/null -w "dispatch %{http_code}\n" -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/btc1h_live.yml/dispatches" -d '{"ref":"main"}'

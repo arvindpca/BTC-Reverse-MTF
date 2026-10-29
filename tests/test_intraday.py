@@ -325,3 +325,83 @@ def test_paper_time_exit_after_48_candles():
     st, _ = step(st, f, mask)
     t = st["trades"][0]
     assert t["reason"].startswith("TIME") and pd.Timestamp(t["exit_time"]) == f.index[3 + 47] + pd.Timedelta(hours=1)
+
+
+# ------------------------------------------------------------------ BTC 1h LIVE-method paper trader
+class FakeFeed:
+    def __init__(self, hourly, minutes):
+        self.h, self.m = hourly, minutes
+
+    def hourly(self):
+        return self.h
+
+    def minutes(self, start, end):
+        m = self.m
+        return m[(m.index >= start.floor("min")) & (m.index <= end)]
+
+
+def _live_setup(min_rows, sig=True, now_month="2026-03"):
+    from intraday.live_btc1h import LiveTrader
+    from intraday.paper_btc1h import new_state
+    hourly = _paper_frame([[100, 100.1, 99.9, 100]] * 5, start="2026-03-01 00:00")
+    hourly["atr"] = 1.0
+    st = new_state(hourly.index[3], now_month)
+    mi = pd.date_range("2026-03-01 05:00", periods=len(min_rows), freq="1min", tz="UTC")
+    m = pd.DataFrame(min_rows, columns=["open", "high", "low", "close"], index=mi, dtype=float)
+    sent = []
+    tr = LiveTrader(st, FakeFeed(hourly, m), sent.append, None, lambda *a: None)
+    import intraday.live_btc1h as L
+    mask = np.zeros(len(hourly), bool)
+    mask[4] = sig
+    L.signal_mask = lambda f: mask
+    return tr, st, sent, hourly, m
+
+
+def test_live_entry_at_live_price_then_stop():
+    rows = [[100, 100.2, 99.9, 100.1], [100.1, 100.3, 99.0, 99.2], [99.2, 99.5, 98.0, 98.2]]
+    tr, st, sent, hourly, m = _live_setup(rows)
+    now = pd.Timestamp("2026-03-01 05:00:20", tz="UTC")
+    tr.on_hour(now)
+    assert st["open"] and st["open"]["entry"] == 100.1 and np.isclose(st["open"]["stop"], 98.6)
+    assert "BUY HO GAYA" in sent[-1]
+    tr.monitor(pd.Timestamp("2026-03-01 05:02:30", tz="UTC"))
+    t = st["trades"][-1]
+    assert t["reason"] == "SL" and np.isclose(t["exit"], 98.6) and st["open"] is None and "STOP LOSS" in sent[-1]
+
+
+def test_live_gap_through_stop_fills_at_open_and_target():
+    rows = [[100, 100, 100, 100], [97, 97.5, 96.5, 97]]
+    tr, st, sent, *_ = _live_setup(rows)
+    tr.on_hour(pd.Timestamp("2026-03-01 05:00:10", tz="UTC"))
+    tr.monitor(pd.Timestamp("2026-03-01 05:01:50", tz="UTC"))
+    assert st["trades"][-1]["exit"] == 97
+    rows = [[100, 100, 100, 100], [100, 103, 99.9, 102], [102, 106, 101, 105]]
+    tr, st, sent, *_ = _live_setup(rows)
+    tr.on_hour(pd.Timestamp("2026-03-01 05:00:10", tz="UTC"))
+    tr.monitor(pd.Timestamp("2026-03-01 05:01:30", tz="UTC"))     # minute 05:01 still forming: high 103 < 104.5
+    assert st["open"]
+    tr.monitor(pd.Timestamp("2026-03-01 05:03:00", tz="UTC"))
+    assert st["trades"][-1]["reason"] == "TP" and np.isclose(st["trades"][-1]["exit"], 104.5)
+
+
+def test_live_stale_signal_is_skipped_and_restart_replays_gap():
+    tr, st, sent, *_ = _live_setup([[100, 100, 100, 100]] * 3)
+    tr.on_hour(pd.Timestamp("2026-03-01 05:40:00", tz="UTC"))         # 40 min late
+    assert st["open"] is None and "CHHOOT" in sent[-1]
+    rows = [[100, 100, 100, 100]] + [[100, 100.5, 99.5, 100]] * 30 + [[100, 100, 98.0, 98.5]] + [[98.5] * 4] * 5
+    tr, st, sent, *_ = _live_setup(rows)
+    tr.on_hour(pd.Timestamp("2026-03-01 05:00:05", tz="UTC"))
+    tr.monitor(pd.Timestamp("2026-03-01 05:36:00", tz="UTC"))         # 'restart' after a 36 min gap
+    t = st["trades"][-1]
+    assert t["reason"] == "SL" and t["exit_time"].startswith("2026-03-01 05:32")
+
+
+def test_live_time_exit_and_new_month_deposit():
+    rows = [[100, 100, 100, 100]] + [[100, 100.5, 99.5, 100.2]] * (48 * 60 + 5)
+    tr, st, sent, *_ = _live_setup(rows)
+    tr.on_hour(pd.Timestamp("2026-03-01 05:00:05", tz="UTC"))
+    tr.monitor(pd.Timestamp("2026-03-03 05:03:00", tz="UTC"))
+    t = st["trades"][-1]
+    assert t["reason"].startswith("TIME") and t["exit_time"].startswith("2026-03-03 05:01")
+    tr.housekeeping(pd.Timestamp("2026-04-01 00:05", tz="UTC"))
+    assert st["deposited"] == 4000 and st["month"] == "2026-04" and any("NAYA MAHINA" in x for x in sent)
