@@ -1,0 +1,32 @@
+name: probe 1m feed
+on:
+  push:
+    branches: [probe/coindcx-1m]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - run: |
+          python - > probe.txt 2>&1 <<'PY'
+          import pandas as pd, time
+          from intraday.live_btc1h import CoinDCXFeed
+          f = CoinDCXFeed()
+          for k in range(3):
+              now = pd.Timestamp.now(tz="UTC")
+              m = f.minutes(now - pd.Timedelta(minutes=5), now)
+              print("now", now, "rows", len(m)); print(m.tail(3))
+              time.sleep(20)
+          now = pd.Timestamp.now(tz="UTC")
+          m = f.minutes(now - pd.Timedelta(hours=20), now)
+          print("20h gap replay rows", len(m), m.index[0], m.index[-1], "missing", 20*60 - len(m))
+          h = f.hourly(); print("hourly last", h.index[-1], h.close.iloc[-1])
+          PY
+          cat probe.txt
+          git config user.name bot; git config user.email bot@x
+          git checkout -q --orphan probe-result; git rm -rfq . ; git add probe.txt; git commit -qm probe; git push -qf origin probe-result
