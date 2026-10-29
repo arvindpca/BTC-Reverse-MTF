@@ -1,1 +1,1 @@
-10-29 11:12:46 state loaded: equity 2927.04, trades 1, open False
+10-29 16:53:48 state loaded: equity 2927.04, trades 1, open False
