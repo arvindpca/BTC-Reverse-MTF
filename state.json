@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "pair": "B-BTC_USDT",
+  "started_at": "2026-10-27 10:00:00+00:00",
+  "settings": {
+    "start_capital": 3000.0,
+    "monthly_add": 1000.0,
+    "risk": 0.02,
+    "risk_upgraded": 0.04,
+    "upgrade_after_months": 6,
+    "upgrade_min_trades": 20,
+    "max_leverage": 30,
+    "sl_atr": 1.5,
+    "rr": 3.0,
+    "hold_bars": 48,
+    "min_stop_pct": 0.25,
+    "cost_per_side_pct": 0.079,
+    "funding_pct_per_8h": 0.01,
+    "dd_alert": 0.2
+  },
+  "equity": 2927.036786434197,
+  "deposited": 3000.0,
+  "peak": 3000.0,
+  "risk": 0.02,
+  "month": "2026-10",
+  "last_bar": "2026-10-29 04:00:00+00:00",
+  "pending": null,
+  "open": null,
+  "trades": [
+    {
+      "signal_time": "2026-10-28 19:00:00+00:00",
+      "entry_time": "2026-10-28 20:00:00+00:00",
+      "exit_time": "2026-10-28 21:00:00+00:00",
+      "entry_ist": "29-Oct 01:30 IST",
+      "exit_ist": "29-Oct 02:30 IST",
+      "entry": 81544.6,
+      "exit": 80948.26,
+      "reason": "SL",
+      "stop_pct": 0.731,
+      "position": 8204.57,
+      "risk_used": 0.02,
+      "funding_n": 0,
+      "net_ret_pct": -0.8893,
+      "R": -1.216,
+      "pnl": -72.96,
+      "equity": 2927.04
+    }
+  ],
+  "deposits": [
+    {
+      "month": "2026-10",
+      "amount": 3000.0
+    }
+  ],
+  "dd_alerted": false,
+  "months_done": []
+}
