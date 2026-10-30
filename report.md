@@ -1,6 +1,6 @@
 # BTC 1h PAPER trading — LIVE method (no real orders)
 
-Started 27-Oct 15:30 IST. Last candle checked: 30-Oct 23:30 IST (close -).
+Started 27-Oct 15:30 IST. Last candle checked: 31-Oct 00:30 IST (close -).
 
 Plan: start 3000, +1000 every month, risk 2% per trade (4% after 6 months if >= 20 trades and total R > 0), 20% drawdown = stop-and-check.
 
