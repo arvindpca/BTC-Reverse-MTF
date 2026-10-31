@@ -23,7 +23,7 @@
   "peak": 3000.0,
   "risk": 0.02,
   "month": "2026-10",
-  "last_bar": "2026-10-31 01:00:00+00:00",
+  "last_bar": "2026-10-31 02:00:00+00:00",
   "pending": null,
   "open": null,
   "trades": [
@@ -63,7 +63,11 @@
     {
       "t": "2026-10-30 03:00:20.546701+00:00",
       "e": "\ud83d\udfe2 SYSTEM CHAL RAHA HAI (roz ka status)"
+    },
+    {
+      "t": "2026-10-31 03:00:20.498253+00:00",
+      "e": "\ud83d\udfe2 SYSTEM CHAL RAHA HAI (roz ka status)"
     }
   ],
-  "last_heartbeat": "2026-10-30"
+  "last_heartbeat": "2026-10-31"
 }
