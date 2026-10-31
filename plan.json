@@ -1,0 +1,24 @@
+{
+ "account": 3325.2312,
+ "withdrawn_total": 0.0,
+ "trades": [
+  {
+   "exit_time": "2026-10-28 04:00:00+00:00",
+   "entry_time": "2026-10-26 04:00:00+00:00",
+   "position": 90000,
+   "stop_pct": 0.717,
+   "net_r": 0.504,
+   "pnl": 325.23,
+   "account": 3325.23
+  }
+ ],
+ "months": [],
+ "open": {
+  "position": 99756.936,
+  "qty": 25.56749117694549,
+  "margin": 3325.2312,
+  "loss_at_stop": 1431.8631072404535,
+  "loss_pct_of_account": 43.06055793174482,
+  "liquidation": 3791.1615500000003
+ }
+}
