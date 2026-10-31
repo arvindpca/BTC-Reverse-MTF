@@ -18,6 +18,64 @@ def send_telegram(text: str) -> bool:
         return False
 
 
+HEAD = "📘 PAXG (Digital Gold) · PAPER TRADE · v2"
+LINE = "━━━━━━━━━━━━━━━━"
+REASONS = {"TRAIL": "Trailing stop", "STOP": "Stop loss", "SL": "Stop loss", "TP": "Target", "TIME": "Time exit"}
+
+
+def _ist(ts: str) -> str:
+    """'2026-10-30 23:00:00+00:00' -> '31-Oct 04:30 IST'"""
+    try:
+        import pandas as pd
+        t = pd.Timestamp(ts)
+        t = t.tz_localize("UTC") if t.tzinfo is None else t
+        return t.tz_convert("Asia/Kolkata").strftime("%d-%b %H:%M IST")
+    except Exception:  # noqa: BLE001
+        return f"{str(ts)[:16]} UTC"
+
+
+def _n(x: float, d: int = 2) -> str:
+    return f"{x:,.{d}f}"
+
+
+def _entry_msg(o: dict) -> str:
+    loss, prof = 1e5 * o["stop_pct"] / 100, 2e5 * o["stop_pct"] / 100
+    return "\n".join([
+        HEAD, LINE,
+        "🟢 PAPER ENTRY — BUY (LONG)",
+        "⚠️ Sirf paper par (no real order)",
+        "",
+        f"📅 Signal: {_ist(o['signal_id'])}",
+        f"💵 Entry: {_n(o['entry'])}",
+        f"🛑 Stop loss: {_n(o['initial_stop'])} ({o['stop_pct']:.2f}% neeche)",
+        "",
+        "📦 Paper account ke hisaab se:",
+        f"   Position: {_n(o['notional'], 0)}",
+        f"   Margin (30x): {_n(o['margin_at_30x'], 1)}",
+        f"   Liquidation: ~{_n(o['liquidation'])}",
+        "",
+        "💡 1,00,000 ki position par (bina leverage):",
+        f"   Stop laga to loss: ~{_n(loss, 0)}",
+        f"   +2R par profit: ~{_n(prof, 0)}",
+    ])
+
+
+def _exit_msg(r: dict) -> str:
+    win = r["net_r"] > 0
+    reason = REASONS.get(str(r["reason"]).upper().split()[0], str(r["reason"]))
+    return "\n".join([
+        HEAD, LINE,
+        f"{'✅' if win else '❌'} PAPER EXIT — SELL ({'PROFIT' if win else 'LOSS'})",
+        "",
+        f"💵 Entry: {_n(r['entry'])}  ({_ist(r['entry_time'])})",
+        f"🏁 Exit: {_n(r['exit'])}  ({_ist(r['exit_time'])})",
+        f"📌 Wajah: {reason}",
+        "",
+        f"📊 Result: {r['net_r']:+.2f}R  |  P/L: {r['pnl']:+,.2f}",
+        f"💼 Paper account ab: {_n(r['equity'])}",
+    ])
+
+
 def build_events(res: dict, state: dict, symbol: str) -> list[str]:
     """Messages for NEW entries and NEW exits only. Mutates `state['notified_entries'/'notified_exits']` so nothing repeats."""
     msgs: list[str] = []
@@ -27,18 +85,12 @@ def build_events(res: dict, state: dict, symbol: str) -> list[str]:
         k = r["entry_time"]
         if k not in ext:
             if not first:
-                msgs.append(f"PAPER EXIT {symbol} LONG\nentry {r['entry']:.2f} at {r['entry_time'][:16]} UTC\n"
-                            f"exit {r['exit']:.2f} ({r['reason']}) at {r['exit_time'][:16]} UTC\nresult {r['net_r']:+.2f} R, P/L {r['pnl']:+.2f}, "
-                            f"paper equity {r['equity']:.2f}")
+                msgs.append(_exit_msg(r))
             ext.add(k)
             ent.add(k)
     o = res["open"]
     if o and o["signal_id"] not in ent:
-        msgs.append(f"PAPER ENTRY {symbol} LONG (log only, no real order)\nsignal {o['signal_id'][:16]} UTC at {o['entry']:.2f}\n"
-                    f"stop {o['initial_stop']:.2f} ({o['stop_pct']:.2f}% away)\nsize notional {o['notional']:.0f}, margin at 30x {o['margin_at_30x']:.1f}\n"
-                    f"liquidation about {o['liquidation']:.2f}\n"
-                    f"Agar 1,00,000 position (no leverage): stop lagne par loss about {1e5 * o['stop_pct'] / 100:.0f}, "
-                    f"+2 R par profit about {2e5 * o['stop_pct'] / 100:.0f}")
+        msgs.append(_entry_msg(o))
         ent.add(o["signal_id"])
     state["notified_entries"], state["notified_exits"] = sorted(ent), sorted(ext)
     return msgs
